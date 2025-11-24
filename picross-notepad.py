@@ -59,10 +59,6 @@ class PicrossApp(tk.Tk):
         area = ttk.Frame(root)
         area.grid(row=1, column=0)
 
-        # Corner label (top-left)
-        corner = tk.Label(area, text="Hints", bg=BG_HINT, width=6)
-        corner.grid(row=0, column=0, sticky="nsew")
-
         # === Column hints: 4 stacked per column ===
         self.col_hint_entries = [[] for _ in range(GRID_SIZE)]
         for c in range(GRID_SIZE):
