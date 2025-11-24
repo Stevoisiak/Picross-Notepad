@@ -53,21 +53,26 @@ class PicrossApp(tk.Tk):
         corner = tk.Label(area, text="Hints", bg=BG_HINT, width=6)
         corner.grid(row=0, column=0, sticky="nsew")
 
-        # Column hints (top row: one Entry per column)
-        self.col_hint_entries = []
+        # Column hints (top: 4 stacked per column)
+        self.col_hint_entries = [[] for _ in range(GRID_SIZE)]
         for c in range(GRID_SIZE):
-            e = tk.Entry(area, width=6, justify="center", bg=BG_HINT, relief="solid", bd=1)
-            e.insert(0, "")  # user types numbers like "3 2"
-            e.grid(row=0, column=c+1, padx=(0,0), pady=(0,4))
-            self.col_hint_entries.append(e)
+            col_frame = tk.Frame(area, bg=BG_HINT)
+            col_frame.grid(row=0, column=c+1, padx=(0,0), pady=(0,4))
+            for i in range(4):
+                e = tk.Entry(col_frame, width=3, justify="center", bg=BG_HINT, relief="solid", bd=1)
+                e.grid(row=i, column=0, pady=1)
+                self.col_hint_entries[c].append(e)
 
-        # Row hints (left column: one Entry per row)
-        self.row_hint_entries = []
+        # Row hints (left: 4 horizontally per row)
+        self.row_hint_entries = [[] for _ in range(GRID_SIZE)]
         for r in range(GRID_SIZE):
-            e = tk.Entry(area, width=8, justify="right", bg=BG_HINT, relief="solid", bd=1)
-            e.insert(0, "")
-            e.grid(row=r+1, column=0, padx=(0,6), pady=(0,0))
-            self.row_hint_entries.append(e)
+            row_frame = tk.Frame(area, bg=BG_HINT)
+            row_frame.grid(row=r+1, column=0, padx=(0,6), pady=(0,0))
+            for i in range(4):
+                e = tk.Entry(row_frame, width=3, justify="center", bg=BG_HINT, relief="solid", bd=1)
+                e.grid(row=0, column=i, padx=1)
+                self.row_hint_entries[r].append(e)
+
 
         # Canvas for the main grid
         canvas_w = GRID_SIZE * CELL_SIZE
