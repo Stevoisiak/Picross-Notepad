@@ -107,6 +107,11 @@ class PicrossApp(tk.Tk):
         self.canvas.bind("<Control-Button-1>", lambda e: self._on_press(e, STATE_X, 3))
         self.canvas.bind("<Control-B1-Motion>", self._on_drag)
         self.canvas.bind("<Control-ButtonRelease-1>", self._on_release)
+        # Mouse5 = clear
+        self.canvas.bind("<Button-5>", lambda e: self._on_press(e, STATE_EMPTY, 8))
+        self.canvas.bind("<B5-Motion>", self._on_drag)
+        self.canvas.bind("<ButtonRelease-5>", self._on_release)
+
 
         # Bind arrow key navigation for hint boxes
         self._bind_hint_navigation()
@@ -263,11 +268,15 @@ class PicrossApp(tk.Tk):
 
         current = self.grid_state[r][c]
 
-        # Toggle: clicking same state sets to empty; else set to desired state
-        if current == desired_state:
+        # If we're clearing, never toggle — always clear
+        if desired_state == STATE_EMPTY:
             self.drag_target_state = STATE_EMPTY
         else:
-            self.drag_target_state = desired_state
+            # Toggle: clicking same state sets to empty; else set to desired state
+            if current == desired_state:
+                self.drag_target_state = STATE_EMPTY
+            else:
+                self.drag_target_state = desired_state
 
         self.drag_cells = []
         self.lock_axis = None
