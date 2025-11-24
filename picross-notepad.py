@@ -23,13 +23,19 @@ class PicrossApp(tk.Tk):
         self.title("Picross 16×16")
         self.resizable(False, False)
 
+        # Grid state and drawing helpers
         self.grid_state = [[STATE_EMPTY for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
         self.rect_ids = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
         self.mark_tags = [[f"mark_{r}_{c}" for c in range(GRID_SIZE)] for r in range(GRID_SIZE)]
 
+        # Drag painting
         self.drag_active = False
         self.drag_target_state = STATE_EMPTY
         self.drag_button = None
+
+        # Hint entries (4 per row, 4 per column)
+        self.row_hint_entries = None  # list[list[Entry]] length GRID_SIZE, each with 4 entries
+        self.col_hint_entries = None  # list[list[Entry]] length GRID_SIZE, each with 4 entries
 
         self._build_ui()
         self._draw_grid()
@@ -38,12 +44,12 @@ class PicrossApp(tk.Tk):
         root = ttk.Frame(self, padding=8)
         root.grid(sticky="nsew")
 
-        # Top instructions / actions
+        # Toolbar
         toolbar = ttk.Frame(root)
         toolbar.grid(row=0, column=0, sticky="w", pady=(0,6))
         ttk.Button(toolbar, text="Reset Board", command=self.reset_board).grid(row=0, column=0, padx=(0,6))
         ttk.Button(toolbar, text="Clear Hints", command=self.clear_hints).grid(row=0, column=1, padx=(0,6))
-        ttk.Label(toolbar, text="Controls: Left=Fill  •  Right=X  •  Middle=Maybe  •  Drag to paint").grid(row=0, column=2)
+        ttk.Label(toolbar, text="Controls: Left=Fill • Right=X • Middle=Maybe • Drag to paint").grid(row=0, column=2)
 
         # Main area with hints + grid
         area = ttk.Frame(root)
@@ -53,7 +59,7 @@ class PicrossApp(tk.Tk):
         corner = tk.Label(area, text="Hints", bg=BG_HINT, width=6)
         corner.grid(row=0, column=0, sticky="nsew")
 
-        # Column hints (top: 4 stacked per column)
+        # === Column hints: 4 stacked per column ===
         self.col_hint_entries = [[] for _ in range(GRID_SIZE)]
         for c in range(GRID_SIZE):
             col_frame = tk.Frame(area, bg=BG_HINT)
@@ -63,7 +69,7 @@ class PicrossApp(tk.Tk):
                 e.grid(row=i, column=0, pady=1)
                 self.col_hint_entries[c].append(e)
 
-        # Row hints (left: 4 horizontally per row)
+        # === Row hints: 4 horizontally per row ===
         self.row_hint_entries = [[] for _ in range(GRID_SIZE)]
         for r in range(GRID_SIZE):
             row_frame = tk.Frame(area, bg=BG_HINT)
@@ -73,27 +79,24 @@ class PicrossApp(tk.Tk):
                 e.grid(row=0, column=i, padx=1)
                 self.row_hint_entries[r].append(e)
 
-
         # Canvas for the main grid
         canvas_w = GRID_SIZE * CELL_SIZE
         canvas_h = GRID_SIZE * CELL_SIZE
         self.canvas = tk.Canvas(area, width=canvas_w, height=canvas_h, bg=BG_GRID, highlightthickness=0)
         self.canvas.grid(row=1, column=1, rowspan=GRID_SIZE, columnspan=GRID_SIZE)
 
-        # Mouse bindings (primary, middle, secondary) + drag + release
+        # Bind mouse input for grid cells
         self.canvas.bind("<Button-1>", lambda e: self._on_press(e, STATE_FILLED, 1))
         self.canvas.bind("<B1-Motion>", self._on_drag)
         self.canvas.bind("<ButtonRelease-1>", self._on_release)
-
-        # Middle click (Button-2); add Shift-Left as a fallback for trackpads
+        # Middle click (Button-2); Shift-Left fallback
         self.canvas.bind("<Button-2>", lambda e: self._on_press(e, STATE_MAYBE, 2))
         self.canvas.bind("<B2-Motion>", self._on_drag)
         self.canvas.bind("<ButtonRelease-2>", self._on_release)
         self.canvas.bind("<Shift-Button-1>", lambda e: self._on_press(e, STATE_MAYBE, 2))
         self.canvas.bind("<Shift-B1-Motion>", self._on_drag)
         self.canvas.bind("<Shift-ButtonRelease-1>", self._on_release)
-
-        # Right click (Button-3); add Control-Left as a fallback for macOS
+        # Right click (Button-3); Ctrl-Left fallback (macOS)
         self.canvas.bind("<Button-3>", lambda e: self._on_press(e, STATE_X, 3))
         self.canvas.bind("<B3-Motion>", self._on_drag)
         self.canvas.bind("<ButtonRelease-3>", self._on_release)
@@ -101,8 +104,11 @@ class PicrossApp(tk.Tk):
         self.canvas.bind("<Control-B1-Motion>", self._on_drag)
         self.canvas.bind("<Control-ButtonRelease-1>", self._on_release)
 
+        # Bind arrow key navigation for hint boxes
+        self._bind_hint_navigation()
+
     def _draw_grid(self):
-        # Draw cell rectangles and gridlines
+        # Draw cell rectangles
         for r in range(GRID_SIZE):
             for c in range(GRID_SIZE):
                 x0 = c * CELL_SIZE
@@ -115,7 +121,7 @@ class PicrossApp(tk.Tk):
                 )
                 self.rect_ids[r][c] = rid
 
-        # Thicker lines every 5th to visually break things up (optional)
+        # Thicker delimiter lines every 5th (optional)
         for i in range(GRID_SIZE + 1):
             w = 2 if i % 5 == 0 else 1
             # vertical
@@ -129,11 +135,87 @@ class PicrossApp(tk.Tk):
                 self._set_cell(r, c, STATE_EMPTY)
 
     def clear_hints(self):
-        for e in self.row_hint_entries:
-            e.delete(0, tk.END)
-        for e in self.col_hint_entries:
-            e.delete(0, tk.END)
+        for r in range(GRID_SIZE):
+            for i in range(4):
+                self.row_hint_entries[r][i].delete(0, tk.END)
+        for c in range(GRID_SIZE):
+            for i in range(4):
+                self.col_hint_entries[c][i].delete(0, tk.END)
 
+    # === Arrow key navigation across hint boxes ===
+    def _bind_hint_navigation(self):
+        # Row hints: left/right within the row; up/down to same index in prev/next row
+        for r in range(GRID_SIZE):
+            for i in range(4):
+                e = self.row_hint_entries[r][i]
+                e.bind("<Left>", lambda ev, r=r, i=i: self._row_hint_move(r, i, "left"))
+                e.bind("<Right>", lambda ev, r=r, i=i: self._row_hint_move(r, i, "right"))
+                e.bind("<Up>", lambda ev, r=r, i=i: self._row_hint_move(r, i, "up"))
+                e.bind("<Down>", lambda ev, r=r, i=i: self._row_hint_move(r, i, "down"))
+
+        # Column hints: up/down within the column; left/right to same index in prev/next column
+        for c in range(GRID_SIZE):
+            for i in range(4):
+                e = self.col_hint_entries[c][i]
+                e.bind("<Up>", lambda ev, c=c, i=i: self._col_hint_move(c, i, "up"))
+                e.bind("<Down>", lambda ev, c=c, i=i: self._col_hint_move(c, i, "down"))
+                e.bind("<Left>", lambda ev, c=c, i=i: self._col_hint_move(c, i, "left"))
+                e.bind("<Right>", lambda ev, c=c, i=i: self._col_hint_move(c, i, "right"))
+
+    def _row_hint_move(self, r, i, direction):
+        target = None
+        if direction == "left":
+            if i > 0:
+                target = self.row_hint_entries[r][i-1]
+        elif direction == "right":
+            if i < 3:
+                target = self.row_hint_entries[r][i+1]
+        elif direction == "up":
+            if r > 0:
+                target = self.row_hint_entries[r-1][i]
+        elif direction == "down":
+            if r < GRID_SIZE - 1:
+                target = self.row_hint_entries[r+1][i]
+
+        if target is not None:
+            self._focus_entry(target)
+            return "break"  # prevent default caret movement
+        # else: let default behavior (caret motion) occur
+
+    def _col_hint_move(self, c, i, direction):
+        target = None
+        if direction == "up":
+            if i > 0:
+                target = self.col_hint_entries[c][i-1]
+        elif direction == "down":
+            if i < 3:
+                target = self.col_hint_entries[c][i+1]
+        elif direction == "left":
+            if c > 0:
+                target = self.col_hint_entries[c-1][i]
+        elif direction == "right":
+            if c < GRID_SIZE - 1:
+                target = self.col_hint_entries[c+1][i]
+
+        if target is not None:
+            self._focus_entry(target)
+            return "break"
+        # else: let default behavior occur
+
+    def _focus_entry(self, entry):
+        entry.focus_set()
+        # Select the whole content for fast editing (optional)
+        try:
+            entry.selection_range(0, tk.END)
+        except tk.TclError:
+            pass
+        # Put caret at end (in case selection isn't desired)
+        try:
+            entry.icursor(tk.END)
+        except tk.TclError:
+            pass
+
+    # === Grid interaction ===
     def _on_press(self, event, desired_state, button_id):
         cell = self._event_to_cell(event)
         if not cell:
@@ -141,7 +223,7 @@ class PicrossApp(tk.Tk):
         r, c = cell
         current = self.grid_state[r][c]
 
-        # Toggle behavior: if already that state, we erase on drag; else we paint that state
+        # Toggle: clicking same state sets to empty; else set to desired state
         if current == desired_state:
             self.drag_target_state = STATE_EMPTY
         else:
@@ -201,7 +283,7 @@ class PicrossApp(tk.Tk):
             self.canvas.create_line(x0+pad, y0+pad, x1-pad, y1-pad, fill=X_COLOR, width=2, tags=(tag,))
             self.canvas.create_line(x0+pad, y1-pad, x1-pad, y0+pad, fill=X_COLOR, width=2, tags=(tag,))
         elif state == STATE_MAYBE:
-            # Draw a small '?' or dot
+            # Draw a '?' marker
             cx = (x0 + x1) / 2
             cy = (y0 + y1) / 2
             self.canvas.create_text(cx, cy, text="?", fill=MAYBE_COLOR, font=("Segoe UI", 12, "bold"), tags=(tag,))
