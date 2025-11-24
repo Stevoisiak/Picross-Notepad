@@ -30,8 +30,12 @@ class PicrossApp(tk.Tk):
 
         # Drag painting
         self.drag_active = False
+        self.lock_axis = None
+        self.drag_cells = []
         self.drag_target_state = STATE_EMPTY
         self.drag_button = None
+        self.lock_axis = None  # ('row', index) or ('col', index)
+        self.drag_cells = []  # track cells filled during drag
 
         # Hint entries (4 per row, 4 per column)
         self.row_hint_entries = None  # list[list[Entry]] length GRID_SIZE, each with 4 entries
@@ -221,6 +225,42 @@ class PicrossApp(tk.Tk):
         if not cell:
             return
         r, c = cell
+
+        # If lock_axis is active, override row or column based on axis
+        if self.lock_axis:
+            axis, idx = self.lock_axis
+            if axis == 'row':
+                # Force row to locked row, compute column from mouse x
+                r = idx
+                c = event.x // CELL_SIZE
+            elif axis == 'col':
+                # Force column to locked column, compute row from mouse y
+                c = idx
+                r = event.y // CELL_SIZE
+            # Validate bounds
+            if r < 0 or r >= GRID_SIZE or c < 0 or c >= GRID_SIZE:
+                return
+
+
+        # Track cells and determine lock axis
+        if cell not in self.drag_cells:
+            self.drag_cells.append(cell)
+            if len(self.drag_cells) == 2 and self.lock_axis is None:
+                r1, c1 = self.drag_cells[0]
+                r2, c2 = self.drag_cells[1]
+                if r1 == r2:
+                    self.lock_axis = ('row', r1)
+                elif c1 == c2:
+                    self.lock_axis = ('col', c1)
+
+        # Enforce lock if set
+        if self.lock_axis:
+            axis, idx = self.lock_axis
+            if axis == 'row' and r != idx:
+                return
+            if axis == 'col' and c != idx:
+                return
+
         current = self.grid_state[r][c]
 
         # Toggle: clicking same state sets to empty; else set to desired state
@@ -229,6 +269,8 @@ class PicrossApp(tk.Tk):
         else:
             self.drag_target_state = desired_state
 
+        self.drag_cells = []
+        self.lock_axis = None
         self.drag_active = True
         self.drag_button = button_id
         self._set_cell(r, c, self.drag_target_state)
@@ -240,12 +282,52 @@ class PicrossApp(tk.Tk):
         if not cell:
             return
         r, c = cell
+
+        # If lock_axis is active, override row or column based on axis
+        if self.lock_axis:
+            axis, idx = self.lock_axis
+            if axis == 'row':
+                # Force row to locked row, compute column from mouse x
+                r = idx
+                c = event.x // CELL_SIZE
+            elif axis == 'col':
+                # Force column to locked column, compute row from mouse y
+                c = idx
+                r = event.y // CELL_SIZE
+            # Validate bounds
+            if r < 0 or r >= GRID_SIZE or c < 0 or c >= GRID_SIZE:
+                return
+
+
+        # Track cells and determine lock axis
+        if cell not in self.drag_cells:
+            self.drag_cells.append(cell)
+            if len(self.drag_cells) == 2 and self.lock_axis is None:
+                r1, c1 = self.drag_cells[0]
+                r2, c2 = self.drag_cells[1]
+                if r1 == r2:
+                    self.lock_axis = ('row', r1)
+                elif c1 == c2:
+                    self.lock_axis = ('col', c1)
+
+        # Enforce lock if set
+        if self.lock_axis:
+            axis, idx = self.lock_axis
+            if axis == 'row' and r != idx:
+                return
+            if axis == 'col' and c != idx:
+                return
+
         if self.grid_state[r][c] != self.drag_target_state:
             self._set_cell(r, c, self.drag_target_state)
 
     def _on_release(self, event):
         self.drag_active = False
+        self.lock_axis = None
+        self.drag_cells = []
         self.drag_button = None
+        self.lock_axis = None  # ('row', index) or ('col', index)
+        self.drag_cells = []  # track cells filled during drag
 
     def _event_to_cell(self, event):
         x, y = event.x, event.y
