@@ -16,6 +16,7 @@ BLOCK_INTERVAL = 4  # thicker grid lines every BLOCK_SIZE cells
 LINE_THIN = 1
 LINE_THICK = 2
 HINT_FONT = ("Segoe UI", 10, "bold")
+HINTS_PER_SIDE = 4
 
 class CellState(IntEnum):
     EMPTY = 0
@@ -67,7 +68,7 @@ class PicrossApp(tk.Tk):
 
         # === Column separators canvas (TOP) ===
         hint_entry_height = 22  # height per hint entry row
-        top_canvas_height = 4 * hint_entry_height
+        top_canvas_height = HINTS_PER_SIDE * hint_entry_height
         self.col_sep_canvas = tk.Canvas(
             area,
             width=GRID_DIMENSIONS * CELL_SIZE,
@@ -82,7 +83,7 @@ class PicrossApp(tk.Tk):
         for c in range(GRID_DIMENSIONS):
             col_frame = tk.Frame(area, bg=HINT_BG_COLOR)
             col_frame.grid(row=0, column=c+1, padx=(0,0), pady=(0,0))
-            for i in range(4):
+            for i in range(HINTS_PER_SIDE):
                 e = tk.Entry(col_frame, width=3, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=HINT_FONT)
                 e.grid(row=i, column=0, pady=0, ipady=0)
                 self.col_hint_entries[c].append(e)
@@ -91,7 +92,7 @@ class PicrossApp(tk.Tk):
         self._draw_top_separators(top_canvas_height)
 
         # === Row separators canvas (LEFT) ===
-        left_canvas_width = 4 * 28  # width to accommodate 4 entries
+        left_canvas_width = HINTS_PER_SIDE * 28  # width to accommodate 4 entries
         self.row_sep_canvas = tk.Canvas(
             area,
             width=left_canvas_width,
@@ -106,7 +107,7 @@ class PicrossApp(tk.Tk):
         for r in range(GRID_DIMENSIONS):
             row_frame = tk.Frame(area, bg=HINT_BG_COLOR)
             row_frame.grid(row=r+1, column=0, padx=(0,0), pady=(0,0), sticky="w")
-            for i in range(4):
+            for i in range(HINTS_PER_SIDE):
                 e = tk.Entry(row_frame, width=3, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=HINT_FONT)
                 e.grid(row=0, column=i, padx=(4 if i > 0 else 0,0), ipady=2)
                 self.row_hint_entries[r].append(e)
@@ -204,17 +205,17 @@ class PicrossApp(tk.Tk):
 
     def clear_hints(self):
         for r in range(GRID_DIMENSIONS):
-            for i in range(4):
+            for i in range(HINTS_PER_SIDE):
                 self.row_hint_entries[r][i].delete(0, tk.END)
         for c in range(GRID_DIMENSIONS):
-            for i in range(4):
+            for i in range(HINTS_PER_SIDE):
                 self.col_hint_entries[c][i].delete(0, tk.END)
 
     # === Arrow key navigation across hint boxes ===
     def _bind_hint_navigation(self):
         # Row hints: left/right within the row; up/down to same index in prev/next row
         for r in range(GRID_DIMENSIONS):
-            for i in range(4):
+            for i in range(HINTS_PER_SIDE):
                 e = self.row_hint_entries[r][i]
                 e.bind("<Left>", lambda ev, r=r, i=i: self._row_hint_move(r, i, "left"))
                 e.bind("<Right>", lambda ev, r=r, i=i: self._row_hint_move(r, i, "right"))
@@ -223,7 +224,7 @@ class PicrossApp(tk.Tk):
 
         # Column hints: up/down within the column; left/right to same index in prev/next column
         for c in range(GRID_DIMENSIONS):
-            for i in range(4):
+            for i in range(HINTS_PER_SIDE):
                 e = self.col_hint_entries[c][i]
                 e.bind("<Up>", lambda ev, c=c, i=i: self._col_hint_move(c, i, "up"))
                 e.bind("<Down>", lambda ev, c=c, i=i: self._col_hint_move(c, i, "down"))
@@ -236,7 +237,7 @@ class PicrossApp(tk.Tk):
             if i > 0:
                 target = self.row_hint_entries[r][i-1]
         elif direction == "right":
-            if i < 3:
+            if i < HINTS_PER_SIDE - 1:
                 target = self.row_hint_entries[r][i+1]
         elif direction == "up":
             if r > 0:
@@ -256,7 +257,7 @@ class PicrossApp(tk.Tk):
             if i > 0:
                 target = self.col_hint_entries[c][i-1]
         elif direction == "down":
-            if i < 3:
+            if i < HINTS_PER_SIDE - 1:
                 target = self.col_hint_entries[c][i+1]
         elif direction == "left":
             if c > 0:
