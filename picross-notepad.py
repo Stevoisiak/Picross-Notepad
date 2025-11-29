@@ -149,32 +149,64 @@ class PicrossApp(tk.Tk):
         self._bind_hint_navigation()
 
     def _draw_top_separators(self, height: int) -> None:
-        """Draw only vertical lines between columns in the top hints area."""
+        """Draw vertical lines between columns in the top hints area, including outer borders."""
         self.col_sep_canvas.delete("sep")
+
+        # Left border
+        self.col_sep_canvas.create_line(
+            0, 0, 0, height,
+            fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
+        )
+        # Right border
+        self.col_sep_canvas.create_line(
+            GRID_DIMENSIONS * CELL_SIZE, 0, GRID_DIMENSIONS * CELL_SIZE, height,
+            fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
+        )
 
         # Thin separators between columns
         for i in range(1, GRID_DIMENSIONS):
-            x = i * CELL_SIZE
-            self.col_sep_canvas.create_line(x, 0, x, height, fill=GRID_LINE_COLOR, width=LINE_THIN, tags=("sep",))
+            col_pos_x = i * CELL_SIZE
+            self.col_sep_canvas.create_line(
+                col_pos_x, 0, col_pos_x, height, fill=GRID_LINE_COLOR, width=LINE_THIN, tags=("sep",)
+            )
 
-        # Optional: thicker delimiters every 4th column to match grid blocks
+        # Thicker delimiters every 4th column to match grid blocks
         for i in range(BLOCK_INTERVAL, GRID_DIMENSIONS, BLOCK_INTERVAL):
-            x = i * CELL_SIZE
-            self.col_sep_canvas.create_line(x, 0, x, height, fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",))
+            col_pos_x = i * CELL_SIZE
+            self.col_sep_canvas.create_line(
+                col_pos_x, 0, col_pos_x, height, fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
+            )
 
     def _draw_left_separators(self, width: int) -> None:
-        """Draw only horizontal lines between rows in the left hints area."""
+        """Draw horizontal lines between rows in the left hints area, including outer borders."""
         self.row_sep_canvas.delete("sep")
+
+        # Top border
+        self.row_sep_canvas.create_line(
+            0, 0, width, 0,
+            fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
+        )
+        # Bottom border
+        self.row_sep_canvas.create_line(
+            0, GRID_DIMENSIONS * CELL_SIZE, width, GRID_DIMENSIONS * CELL_SIZE,
+            fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
+        )
 
         # Thin separators between rows
         for i in range(1, GRID_DIMENSIONS):
-            y = i * CELL_SIZE
-            self.row_sep_canvas.create_line(0, y, width, y, fill=GRID_LINE_COLOR, width=LINE_THIN, tags=("sep",))
+            row_pos_y = i * CELL_SIZE
+            self.row_sep_canvas.create_line(
+                0, row_pos_y, width, row_pos_y,
+                fill=GRID_LINE_COLOR, width=LINE_THIN, tags=("sep",)
+            )
 
-        # Optional: thicker delimiters every 4th row to match grid blocks
+        # Thicker delimiters every 4th row to match grid blocks
         for i in range(BLOCK_INTERVAL, GRID_DIMENSIONS, BLOCK_INTERVAL):
-            y = i * CELL_SIZE
-            self.row_sep_canvas.create_line(0, y, width, y, fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",))
+            row_pos_y = i * CELL_SIZE
+            self.row_sep_canvas.create_line(
+                0, row_pos_y, width, row_pos_y,
+                fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
+            )
 
     def _draw_grid(self):
         # Draw cell rectangles
