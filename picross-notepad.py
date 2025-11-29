@@ -33,7 +33,7 @@ class PicrossApp(tk.Tk):
         # Grid state and drawing helpers
         self.grid_state = [[CellState.EMPTY for _ in range(GRID_DIMENSIONS)] for _ in range(GRID_DIMENSIONS)]
         self.rect_ids = [[None for _ in range(GRID_DIMENSIONS)] for _ in range(GRID_DIMENSIONS)]
-        self.mark_tags = [[f"mark_{r}_{c}" for c in range(GRID_DIMENSIONS)] for r in range(GRID_DIMENSIONS)]
+        self.mark_tags = [[f"mark_{row}_{col}" for col in range(GRID_DIMENSIONS)] for row in range(GRID_DIMENSIONS)]
 
         # Drag painting
         self.user_is_dragging = False
@@ -80,13 +80,13 @@ class PicrossApp(tk.Tk):
 
         # === Column hints: 4 stacked per column ===
         self.col_hint_entries = [[] for _ in range(GRID_DIMENSIONS)]
-        for c in range(GRID_DIMENSIONS):
+        for col in range(GRID_DIMENSIONS):
             col_frame = tk.Frame(area, bg=HINT_BG_COLOR)
-            col_frame.grid(row=0, column=c+1, padx=(0,0), pady=(0,0))
+            col_frame.grid(row=0, column=col+1, padx=(0,0), pady=(0,0))
             for i in range(HINTS_PER_SIDE):
                 e = tk.Entry(col_frame, width=3, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=HINT_FONT)
                 e.grid(row=i, column=0, pady=0, ipady=0)
-                self.col_hint_entries[c].append(e)
+                self.col_hint_entries[col].append(e)
 
         # Draw vertical separators between columns on the top canvas
         self._draw_top_separators(top_canvas_height)
@@ -104,13 +104,13 @@ class PicrossApp(tk.Tk):
 
         # === Row hints: 4 horizontally per row ===
         self.row_hint_entries = [[] for _ in range(GRID_DIMENSIONS)]
-        for r in range(GRID_DIMENSIONS):
+        for row in range(GRID_DIMENSIONS):
             row_frame = tk.Frame(area, bg=HINT_BG_COLOR)
-            row_frame.grid(row=r+1, column=0, padx=(0,0), pady=(0,0), sticky="w")
+            row_frame.grid(row=row+1, column=0, padx=(0,0), pady=(0,0), sticky="w")
             for i in range(HINTS_PER_SIDE):
                 e = tk.Entry(row_frame, width=3, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=HINT_FONT)
                 e.grid(row=0, column=i, padx=(4 if i > 0 else 0,0), ipady=2)
-                self.row_hint_entries[r].append(e)
+                self.row_hint_entries[row].append(e)
 
         # Draw horizontal separators between rows on the left canvas
         self._draw_left_separators(left_canvas_width)
@@ -178,17 +178,17 @@ class PicrossApp(tk.Tk):
 
     def _draw_grid(self):
         # Draw cell rectangles
-        for r in range(GRID_DIMENSIONS):
-            for c in range(GRID_DIMENSIONS):
-                x0 = c * CELL_SIZE
-                y0 = r * CELL_SIZE
+        for row in range(GRID_DIMENSIONS):
+            for col in range(GRID_DIMENSIONS):
+                x0 = col * CELL_SIZE
+                y0 = row * CELL_SIZE
                 x1 = x0 + CELL_SIZE
                 y1 = y0 + CELL_SIZE
                 rid = self.grid_canvas.create_rectangle(
                     x0, y0, x1, y1,
-                    fill=GRID_BG_COLOR, outline=GRID_LINE_COLOR, width=LINE_THIN, tags=(f"cell_{r}_{c}",)
+                    fill=GRID_BG_COLOR, outline=GRID_LINE_COLOR, width=LINE_THIN, tags=(f"cell_{row}_{col}",)
                 )
-                self.rect_ids[r][c] = rid
+                self.rect_ids[row][col] = rid
 
         # Thicker delimiter lines every 4th row/column
         for i in range(GRID_DIMENSIONS + 1):
@@ -199,72 +199,72 @@ class PicrossApp(tk.Tk):
             self.grid_canvas.create_line(0, i * CELL_SIZE, GRID_DIMENSIONS * CELL_SIZE, i * CELL_SIZE, fill=GRID_LINE_COLOR, width=line_width)
 
     def reset_board(self):
-        for r in range(GRID_DIMENSIONS):
-            for c in range(GRID_DIMENSIONS):
-                self._set_cell(r, c, CellState.EMPTY)
+        for row in range(GRID_DIMENSIONS):
+            for col in range(GRID_DIMENSIONS):
+                self._set_cell(row, col, CellState.EMPTY)
 
     def clear_hints(self):
-        for r in range(GRID_DIMENSIONS):
+        for row in range(GRID_DIMENSIONS):
             for i in range(HINTS_PER_SIDE):
-                self.row_hint_entries[r][i].delete(0, tk.END)
-        for c in range(GRID_DIMENSIONS):
+                self.row_hint_entries[row][i].delete(0, tk.END)
+        for col in range(GRID_DIMENSIONS):
             for i in range(HINTS_PER_SIDE):
-                self.col_hint_entries[c][i].delete(0, tk.END)
+                self.col_hint_entries[col][i].delete(0, tk.END)
 
     # === Arrow key navigation across hint boxes ===
     def _bind_hint_navigation(self):
         # Row hints: left/right within the row; up/down to same index in prev/next row
-        for r in range(GRID_DIMENSIONS):
+        for row in range(GRID_DIMENSIONS):
             for i in range(HINTS_PER_SIDE):
-                e = self.row_hint_entries[r][i]
-                e.bind("<Left>", lambda ev, r=r, i=i: self._row_hint_move(r, i, "left"))
-                e.bind("<Right>", lambda ev, r=r, i=i: self._row_hint_move(r, i, "right"))
-                e.bind("<Up>", lambda ev, r=r, i=i: self._row_hint_move(r, i, "up"))
-                e.bind("<Down>", lambda ev, r=r, i=i: self._row_hint_move(r, i, "down"))
+                e = self.row_hint_entries[row][i]
+                e.bind("<Left>", lambda ev, row=row, i=i: self._row_hint_move(row, i, "left"))
+                e.bind("<Right>", lambda ev, row=row, i=i: self._row_hint_move(row, i, "right"))
+                e.bind("<Up>", lambda ev, row=row, i=i: self._row_hint_move(row, i, "up"))
+                e.bind("<Down>", lambda ev, row=row, i=i: self._row_hint_move(row, i, "down"))
 
         # Column hints: up/down within the column; left/right to same index in prev/next column
-        for c in range(GRID_DIMENSIONS):
+        for col in range(GRID_DIMENSIONS):
             for i in range(HINTS_PER_SIDE):
-                e = self.col_hint_entries[c][i]
-                e.bind("<Up>", lambda ev, c=c, i=i: self._col_hint_move(c, i, "up"))
-                e.bind("<Down>", lambda ev, c=c, i=i: self._col_hint_move(c, i, "down"))
-                e.bind("<Left>", lambda ev, c=c, i=i: self._col_hint_move(c, i, "left"))
-                e.bind("<Right>", lambda ev, c=c, i=i: self._col_hint_move(c, i, "right"))
+                e = self.col_hint_entries[col][i]
+                e.bind("<Up>", lambda ev, col=col, i=i: self._col_hint_move(col, i, "up"))
+                e.bind("<Down>", lambda ev, col=col, i=i: self._col_hint_move(col, i, "down"))
+                e.bind("<Left>", lambda ev, col=col, i=i: self._col_hint_move(col, i, "left"))
+                e.bind("<Right>", lambda ev, col=col, i=i: self._col_hint_move(col, i, "right"))
 
-    def _row_hint_move(self, r, i, direction):
+    def _row_hint_move(self, row, i, direction):
         target = None
         if direction == "left":
             if i > 0:
-                target = self.row_hint_entries[r][i-1]
+                target = self.row_hint_entries[row][i-1]
         elif direction == "right":
             if i < HINTS_PER_SIDE - 1:
-                target = self.row_hint_entries[r][i+1]
+                target = self.row_hint_entries[row][i+1]
         elif direction == "up":
-            if r > 0:
-                target = self.row_hint_entries[r-1][i]
+            if row > 0:
+                target = self.row_hint_entries[row-1][i]
         elif direction == "down":
-            if r < GRID_DIMENSIONS - 1:
-                target = self.row_hint_entries[r+1][i]
+            if row < GRID_DIMENSIONS - 1:
+                target = self.row_hint_entries[row+1][i]
 
         if target is not None:
             self._focus_entry(target)
             return "break"  # prevent default caret movement
         # else: let default behavior (caret motion) occur
 
-    def _col_hint_move(self, c, i, direction):
+    def _col_hint_move(self, col, i, direction):
         target = None
         if direction == "up":
             if i > 0:
-                target = self.col_hint_entries[c][i-1]
+                target = self.col_hint_entries[col][i-1]
         elif direction == "down":
             if i < HINTS_PER_SIDE - 1:
-                target = self.col_hint_entries[c][i+1]
+                target = self.col_hint_entries[col][i+1]
         elif direction == "left":
-            if c > 0:
-                target = self.col_hint_entries[c-1][i]
+            if col > 0:
+                target = self.col_hint_entries[col-1][i]
         elif direction == "right":
-            if c < GRID_DIMENSIONS - 1:
-                target = self.col_hint_entries[c+1][i]
+            if col < GRID_DIMENSIONS - 1:
+                target = self.col_hint_entries[col+1][i]
 
         if target is not None:
             self._focus_entry(target)
@@ -288,23 +288,23 @@ class PicrossApp(tk.Tk):
         base = self._event_to_cell(event)
         if not base:
             return None
-        r, c = base
+        row, col = base
 
         # If lock_axis is active, override row or column based on axis
         if self.dragging_lock_axis:
             axis, idx = self.dragging_lock_axis
             if axis == 'row':
                 # Force row to locked row, compute column from mouse x
-                r = idx
-                c = event.x // CELL_SIZE
+                row = idx
+                col = event.x // CELL_SIZE
             elif axis == 'col':
                 # Force column to locked column, compute row from mouse y
-                c = idx
-                r = event.y // CELL_SIZE
+                col = idx
+                row = event.y // CELL_SIZE
         # Validate bounds
-        if r < 0 or r >= GRID_DIMENSIONS or c < 0 or c >= GRID_DIMENSIONS:
+        if row < 0 or row >= GRID_DIMENSIONS or col < 0 or col >= GRID_DIMENSIONS:
             return None
-        return int(r), int(c)
+        return int(row), int(col)
 
     def _update_drag_axis_lock(self, cell):
         if not self.dragging_path_cells or self.dragging_path_cells[-1] != cell:
@@ -317,8 +317,8 @@ class PicrossApp(tk.Tk):
             elif c1 == c2:
                 self.dragging_lock_axis = ('col', c1)
 
-    def _compute_drag_target(self, r, c, desired_state):
-        current = self.grid_state[r][c]
+    def _compute_drag_target(self, row, col, desired_state):
+        current = self.grid_state[row][col]
         if desired_state == CellState.EMPTY:
             return CellState.EMPTY
         return CellState.EMPTY if current == desired_state else desired_state
@@ -327,14 +327,14 @@ class PicrossApp(tk.Tk):
         cell = self._event_to_locked_cell(event)
         if not cell:
             return
-        r, c = cell
+        row, col = cell
         # Enforce lock if set
         if self.dragging_lock_axis:
             axis, idx = self.dragging_lock_axis
-            if (axis == 'row' and r != idx) or (axis == 'col' and c != idx):
+            if (axis == 'row' and row != idx) or (axis == 'col' and col != idx):
                 return
-        if self.grid_state[r][c] != target_state:
-            self._set_cell(r, c, target_state)
+        if self.grid_state[row][col] != target_state:
+            self._set_cell(row, col, target_state)
 
 
     # === Grid interaction ===
@@ -342,13 +342,13 @@ class PicrossApp(tk.Tk):
         cell = self._event_to_locked_cell(event)
         if not cell:
             return
-        r, c = cell
-        self.dragging_target_state = self._compute_drag_target(r, c, desired_state)
+        row, col = cell
+        self.dragging_target_state = self._compute_drag_target(row, col, desired_state)
         self.dragging_path_cells = []
         self.dragging_lock_axis = None
         self.user_is_dragging = True
         self.dragging_button_id = button_id
-        self._update_drag_axis_lock((r, c))
+        self._update_drag_axis_lock((row, col))
         self._apply_cell_state(event, self.dragging_target_state)
 
     def _on_drag(self, event):
@@ -370,16 +370,16 @@ class PicrossApp(tk.Tk):
         x, y = event.x, event.y
         if x < 0 or y < 0:
             return None
-        c = x // CELL_SIZE
-        r = y // CELL_SIZE
-        if 0 <= r < GRID_DIMENSIONS and 0 <= c < GRID_DIMENSIONS:
-            return int(r), int(c)
+        col = x // CELL_SIZE
+        row = y // CELL_SIZE
+        if 0 <= row < GRID_DIMENSIONS and 0 <= col < GRID_DIMENSIONS:
+            return int(row), int(col)
         return None
 
-    def _set_cell(self, r, c, state):
-        self.grid_state[r][c] = state
-        rect_id = self.rect_ids[r][c]
-        tag = self.mark_tags[r][c]
+    def _set_cell(self, row, col, state):
+        self.grid_state[row][col] = state
+        rect_id = self.rect_ids[row][col]
+        tag = self.mark_tags[row][col]
 
         # Clear any mark overlays for this cell
         self.grid_canvas.delete(tag)
@@ -391,8 +391,8 @@ class PicrossApp(tk.Tk):
             self.grid_canvas.itemconfig(rect_id, fill=GRID_BG_COLOR)
 
         # Overlay marks for X and Maybe
-        x0 = c * CELL_SIZE
-        y0 = r * CELL_SIZE
+        x0 = col * CELL_SIZE
+        y0 = row * CELL_SIZE
         x1 = x0 + CELL_SIZE
         y1 = y0 + CELL_SIZE
         pad = 6
