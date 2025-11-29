@@ -1,3 +1,4 @@
+from enum import IntEnum
 
 # picross.py
 import tkinter as tk
@@ -12,10 +13,11 @@ FILLED_COLOR = "#111111"
 X_COLOR = "#D22"
 MAYBE_COLOR = "#666"
 
-STATE_EMPTY = 0
-STATE_FILLED = 1
-STATE_X = 2
-STATE_MAYBE = 3
+class CellState(IntEnum):
+    EMPTY = 0
+    FILLED = 1
+    X = 2
+    MAYBE = 3
 
 class PicrossApp(tk.Tk):
     def __init__(self):
@@ -24,7 +26,7 @@ class PicrossApp(tk.Tk):
         self.resizable(False, False)
 
         # Grid state and drawing helpers
-        self.grid_state = [[STATE_EMPTY for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
+        self.grid_state = [[CellState.EMPTY for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
         self.rect_ids = [[None for _ in range(GRID_SIZE)] for _ in range(GRID_SIZE)]
         self.mark_tags = [[f"mark_{r}_{c}" for c in range(GRID_SIZE)] for r in range(GRID_SIZE)]
 
@@ -32,7 +34,7 @@ class PicrossApp(tk.Tk):
         self.drag_active = False
         self.lock_axis = None
         self.drag_cells = []
-        self.drag_target_state = STATE_EMPTY
+        self.drag_target_state = CellState.EMPTY
         self.drag_button = None
         self.lock_axis = None  # ('row', index) or ('col', index)
         self.drag_cells = []  # track cells filled during drag
@@ -115,25 +117,25 @@ class PicrossApp(tk.Tk):
         self.canvas.grid(row=1, column=1, rowspan=GRID_SIZE, columnspan=GRID_SIZE)
 
         # Bind mouse input for grid cells
-        self.canvas.bind("<Button-1>", lambda e: self._on_press(e, STATE_FILLED, 1))
+        self.canvas.bind("<Button-1>", lambda e: self._on_press(e, CellState.FILLED, 1))
         self.canvas.bind("<B1-Motion>", self._on_drag)
         self.canvas.bind("<ButtonRelease-1>", self._on_release)
         # Middle click (Button-2); Shift-Left fallback
-        self.canvas.bind("<Button-2>", lambda e: self._on_press(e, STATE_MAYBE, 2))
+        self.canvas.bind("<Button-2>", lambda e: self._on_press(e, CellState.MAYBE, 2))
         self.canvas.bind("<B2-Motion>", self._on_drag)
         self.canvas.bind("<ButtonRelease-2>", self._on_release)
-        self.canvas.bind("<Shift-Button-1>", lambda e: self._on_press(e, STATE_MAYBE, 2))
+        self.canvas.bind("<Shift-Button-1>", lambda e: self._on_press(e, CellState.MAYBE, 2))
         self.canvas.bind("<Shift-B1-Motion>", self._on_drag)
         self.canvas.bind("<Shift-ButtonRelease-1>", self._on_release)
         # Right click (Button-3); Ctrl-Left fallback (macOS)
-        self.canvas.bind("<Button-3>", lambda e: self._on_press(e, STATE_X, 3))
+        self.canvas.bind("<Button-3>", lambda e: self._on_press(e, CellState.X, 3))
         self.canvas.bind("<B3-Motion>", self._on_drag)
         self.canvas.bind("<ButtonRelease-3>", self._on_release)
-        self.canvas.bind("<Control-Button-1>", lambda e: self._on_press(e, STATE_X, 3))
+        self.canvas.bind("<Control-Button-1>", lambda e: self._on_press(e, CellState.X, 3))
         self.canvas.bind("<Control-B1-Motion>", self._on_drag)
         self.canvas.bind("<Control-ButtonRelease-1>", self._on_release)
         # Mouse5 = clear
-        self.canvas.bind("<Button-5>", lambda e: self._on_press(e, STATE_EMPTY, 8))
+        self.canvas.bind("<Button-5>", lambda e: self._on_press(e, CellState.EMPTY, 8))
         self.canvas.bind("<B5-Motion>", self._on_drag)
         self.canvas.bind("<ButtonRelease-5>", self._on_release)
 
@@ -194,7 +196,7 @@ class PicrossApp(tk.Tk):
     def reset_board(self):
         for r in range(GRID_SIZE):
             for c in range(GRID_SIZE):
-                self._set_cell(r, c, STATE_EMPTY)
+                self._set_cell(r, c, CellState.EMPTY)
 
     def clear_hints(self):
         for r in range(GRID_SIZE):
@@ -322,12 +324,12 @@ class PicrossApp(tk.Tk):
         current = self.grid_state[r][c]
 
         # If we're clearing, never toggle — always clear
-        if desired_state == STATE_EMPTY:
-            self.drag_target_state = STATE_EMPTY
+        if desired_state == CellState.EMPTY:
+            self.drag_target_state = CellState.EMPTY
         else:
             # Toggle: clicking same state sets to empty; else set to desired state
             if current == desired_state:
-                self.drag_target_state = STATE_EMPTY
+                self.drag_target_state = CellState.EMPTY
             else:
                 self.drag_target_state = desired_state
 
@@ -410,7 +412,7 @@ class PicrossApp(tk.Tk):
         self.canvas.delete(tag)
 
         # Base background
-        if state == STATE_FILLED:
+        if state == CellState.FILLED:
             self.canvas.itemconfig(rect_id, fill=FILLED_COLOR)
         else:
             self.canvas.itemconfig(rect_id, fill=BG_GRID)
@@ -422,11 +424,11 @@ class PicrossApp(tk.Tk):
         y1 = y0 + CELL_SIZE
         pad = 6
 
-        if state == STATE_X:
+        if state == CellState.X:
             # Draw an 'X'
             self.canvas.create_line(x0+pad, y0+pad, x1-pad, y1-pad, fill=X_COLOR, width=2, tags=(tag,))
             self.canvas.create_line(x0+pad, y1-pad, x1-pad, y0+pad, fill=X_COLOR, width=2, tags=(tag,))
-        elif state == STATE_MAYBE:
+        elif state == CellState.MAYBE:
             # Draw a '?' marker
             cx = (x0 + x1) / 2
             cy = (y0 + y1) / 2
