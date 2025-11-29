@@ -188,7 +188,7 @@ class PicrossApp(tk.Tk):
                 )
                 self.rect_ids[r][c] = rid
 
-        # Thicker delimiter lines every 4th (optional)
+        # Thicker delimiter lines every 4th row/column
         for i in range(GRID_SIZE + 1):
             w = THICK if i % BLOCK_SIZE == 0 else THIN
             # vertical
