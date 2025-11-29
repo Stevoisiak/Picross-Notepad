@@ -149,67 +149,78 @@ class PicrossApp(tk.Tk):
         self._bind_hint_navigation()
 
     def _draw_top_hint_separators(self, height: int) -> None:
-        """Draw vertical lines between columns in the top hints area, including outer borders."""
+        """Draw vertical lines between columns in the top hints area, including outer borders with proper stroke insets."""
         self.col_sep_canvas.delete("sep")
+
+        # Outer borders (use half-width inset to avoid clipping)
+        inset = LINE_THICK / 2
+        total_width = GRID_DIMENSIONS * CELL_SIZE
 
         # Left border
         self.col_sep_canvas.create_line(
-            0, 0, 0, height,
+            inset, 0, inset, height,
             fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
         )
         # Right border
         self.col_sep_canvas.create_line(
-            GRID_DIMENSIONS * CELL_SIZE, 0, GRID_DIMENSIONS * CELL_SIZE, height,
+            total_width - inset, 0, total_width - inset, height,
             fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
         )
 
         # Thin separators between columns
         for i in range(1, GRID_DIMENSIONS):
-            col_pos_x = i * CELL_SIZE
+            x_pos = i * CELL_SIZE
             self.col_sep_canvas.create_line(
-                col_pos_x, 0, col_pos_x, height, fill=GRID_LINE_COLOR, width=LINE_THIN, tags=("sep",)
+                x_pos, 0, x_pos, height,
+                fill=GRID_LINE_COLOR, width=LINE_THIN, tags=("sep",)
             )
 
         # Thicker delimiters every 4th column to match grid blocks
         for i in range(BLOCK_INTERVAL, GRID_DIMENSIONS, BLOCK_INTERVAL):
-            col_pos_x = i * CELL_SIZE
+            x_pos = i * CELL_SIZE
             self.col_sep_canvas.create_line(
-                col_pos_x, 0, col_pos_x, height, fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
+                x_pos, 0, x_pos, height,
+                fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
             )
 
+
     def _draw_left_hint_separators(self, width: int) -> None:
-        """Draw horizontal lines between rows in the left hints area, including outer borders."""
+        """Draw horizontal lines between rows in the left hints area, including outer borders with proper stroke insets."""
         self.row_sep_canvas.delete("sep")
+
+        # Outer borders (use half-width inset to avoid clipping)
+        inset = LINE_THICK / 2
+        total_height = GRID_DIMENSIONS * CELL_SIZE
 
         # Top border
         self.row_sep_canvas.create_line(
-            0, 0, width, 0,
+            0, inset, width, inset,
             fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
         )
         # Bottom border
         self.row_sep_canvas.create_line(
-            0, GRID_DIMENSIONS * CELL_SIZE, width, GRID_DIMENSIONS * CELL_SIZE,
+            0, total_height - inset, width, total_height - inset,
             fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
         )
 
         # Thin separators between rows
         for i in range(1, GRID_DIMENSIONS):
-            row_pos_y = i * CELL_SIZE
+            y_pos = i * CELL_SIZE
             self.row_sep_canvas.create_line(
-                0, row_pos_y, width, row_pos_y,
+                0, y_pos, width, y_pos,
                 fill=GRID_LINE_COLOR, width=LINE_THIN, tags=("sep",)
             )
 
         # Thicker delimiters every 4th row to match grid blocks
         for i in range(BLOCK_INTERVAL, GRID_DIMENSIONS, BLOCK_INTERVAL):
-            row_pos_y = i * CELL_SIZE
+            y_pos = i * CELL_SIZE
             self.row_sep_canvas.create_line(
-                0, row_pos_y, width, row_pos_y,
+                0, y_pos, width, y_pos,
                 fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
             )
 
     def _draw_grid(self):
-        # Draw cell rectangles
+        # Draw cell rectangles: fills only; no outlines (prevents doubled internal borders)
         for row in range(GRID_DIMENSIONS):
             for col in range(GRID_DIMENSIONS):
                 x0 = col * CELL_SIZE
@@ -218,17 +229,38 @@ class PicrossApp(tk.Tk):
                 y1 = y0 + CELL_SIZE
                 rid = self.grid_canvas.create_rectangle(
                     x0, y0, x1, y1,
-                    fill=GRID_BG_COLOR, outline=GRID_LINE_COLOR, width=LINE_THIN, tags=(f"cell_{row}_{col}",)
+                    fill=GRID_BG_COLOR, outline="", width=0,
+                    tags=(f"cell_{row}_{col}",)
                 )
                 self.rect_ids[row][col] = rid
 
-        # Thicker delimiter lines every 4th row/column
-        for i in range(GRID_DIMENSIONS + 1):
+        # Draw internal vertical/horizontal separators (skip outer edges here)
+        for i in range(1, GRID_DIMENSIONS):
+            # Choose width (thick every BLOCK_INTERVAL)
             line_width = LINE_THICK if i % BLOCK_INTERVAL == 0 else LINE_THIN
-            # vertical
-            self.grid_canvas.create_line(i * CELL_SIZE, 0, i * CELL_SIZE, GRID_DIMENSIONS * CELL_SIZE, fill=GRID_LINE_COLOR, width=line_width)
-            # horizontal
-            self.grid_canvas.create_line(0, i * CELL_SIZE, GRID_DIMENSIONS * CELL_SIZE, i * CELL_SIZE, fill=GRID_LINE_COLOR, width=line_width)
+            x_pos = i * CELL_SIZE
+            y_pos = i * CELL_SIZE
+
+            # vertical internal line
+            self.grid_canvas.create_line(
+                x_pos, 0, x_pos, GRID_DIMENSIONS * CELL_SIZE,
+                fill=GRID_LINE_COLOR, width=line_width
+            )
+            # horizontal internal line
+            self.grid_canvas.create_line(
+                0, y_pos, GRID_DIMENSIONS * CELL_SIZE, y_pos,
+                fill=GRID_LINE_COLOR, width=line_width
+            )
+
+        # Draw outer border as a single rectangle inset so full stroke is visible
+        inset = LINE_THICK / 2
+        total_width = GRID_DIMENSIONS * CELL_SIZE
+        total_height = GRID_DIMENSIONS * CELL_SIZE
+
+        self.grid_canvas.create_rectangle(
+            inset, inset, total_width - inset, total_height - inset,
+            outline=GRID_LINE_COLOR, width=LINE_THICK
+        )
 
     def reset_board(self):
         for row in range(GRID_DIMENSIONS):
