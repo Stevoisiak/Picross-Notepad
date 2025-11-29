@@ -59,25 +59,54 @@ class PicrossApp(tk.Tk):
         area = ttk.Frame(root)
         area.grid(row=1, column=0)
 
+        # === Column separators canvas (TOP) ===
+        hint_entry_height = 22  # height per hint entry row
+        top_canvas_h = 4 * hint_entry_height
+        self.col_sep_canvas = tk.Canvas(
+            area,
+            width=GRID_SIZE * CELL_SIZE,
+            height=top_canvas_h,
+            bg=BG_HINT,
+            highlightthickness=0,
+        )
+        self.col_sep_canvas.grid(row=0, column=1, columnspan=GRID_SIZE, sticky="ew")
+
         # === Column hints: 4 stacked per column ===
         self.col_hint_entries = [[] for _ in range(GRID_SIZE)]
         for c in range(GRID_SIZE):
             col_frame = tk.Frame(area, bg=BG_HINT)
-            col_frame.grid(row=0, column=c+1, padx=(0,0), pady=(0,2))
+            col_frame.grid(row=0, column=c+1, padx=(0,0), pady=(0,0))
             for i in range(4):
-                e = tk.Entry(col_frame, width=3, justify="center", bg=BG_HINT, relief="solid", bd=1, font=("Segoe UI", 10, "bold"))
-                e.grid(row=i, column=0, pady=0)
+                e = tk.Entry(col_frame, width=3, justify="center", bg=BG_HINT, relief="flat", bd=0, font=("Segoe UI", 10, "bold"))
+                e.grid(row=i, column=0, pady=0, ipady=0)
                 self.col_hint_entries[c].append(e)
+
+        # Draw vertical separators between columns on the top canvas
+        self._draw_top_separators(top_canvas_h)
+
+        # === Row separators canvas (LEFT) ===
+        left_canvas_w = 4 * 28  # width to accommodate 4 entries
+        self.row_sep_canvas = tk.Canvas(
+            area,
+            width=left_canvas_w,
+            height=GRID_SIZE * CELL_SIZE,
+            bg=BG_HINT,
+            highlightthickness=0,
+        )
+        self.row_sep_canvas.grid(row=1, column=0, rowspan=GRID_SIZE, sticky="ns")
 
         # === Row hints: 4 horizontally per row ===
         self.row_hint_entries = [[] for _ in range(GRID_SIZE)]
         for r in range(GRID_SIZE):
             row_frame = tk.Frame(area, bg=BG_HINT)
-            row_frame.grid(row=r+1, column=0, padx=(0,2), pady=(0,0))
+            row_frame.grid(row=r+1, column=0, padx=(0,0), pady=(0,0), sticky="w")
             for i in range(4):
-                e = tk.Entry(row_frame, width=3, justify="center", bg=BG_HINT, relief="solid", bd=1, font=("Segoe UI", 10, "bold"))
-                e.grid(row=0, column=i, padx=0)
+                e = tk.Entry(row_frame, width=3, justify="center", bg=BG_HINT, relief="flat", bd=0, font=("Segoe UI", 10, "bold"))
+                e.grid(row=0, column=i, padx=(4 if i > 0 else 0,0), ipady=2)
                 self.row_hint_entries[r].append(e)
+
+        # Draw horizontal separators between rows on the left canvas
+        self._draw_left_separators(left_canvas_w)
 
         # Canvas for the main grid
         canvas_w = GRID_SIZE * CELL_SIZE
@@ -111,6 +140,34 @@ class PicrossApp(tk.Tk):
 
         # Bind arrow key navigation for hint boxes
         self._bind_hint_navigation()
+
+    def _draw_top_separators(self, height: int) -> None:
+        """Draw only vertical lines between columns in the top hints area."""
+        self.col_sep_canvas.delete("sep")
+
+        # Thin separators between columns
+        for i in range(1, GRID_SIZE):
+            x = i * CELL_SIZE
+            self.col_sep_canvas.create_line(x, 0, x, height, fill=LINE_COLOR, width=1, tags=("sep",))
+
+        # Optional: thicker delimiters every 4th column to match grid blocks
+        for i in range(4, GRID_SIZE, 4):
+            x = i * CELL_SIZE
+            self.col_sep_canvas.create_line(x, 0, x, height, fill=LINE_COLOR, width=2, tags=("sep",))
+
+    def _draw_left_separators(self, width: int) -> None:
+        """Draw only horizontal lines between rows in the left hints area."""
+        self.row_sep_canvas.delete("sep")
+
+        # Thin separators between rows
+        for i in range(1, GRID_SIZE):
+            y = i * CELL_SIZE
+            self.row_sep_canvas.create_line(0, y, width, y, fill=LINE_COLOR, width=1, tags=("sep",))
+
+        # Optional: thicker delimiters every 4th row to match grid blocks
+        for i in range(4, GRID_SIZE, 4):
+            y = i * CELL_SIZE
+            self.row_sep_canvas.create_line(0, y, width, y, fill=LINE_COLOR, width=2, tags=("sep",))
 
     def _draw_grid(self):
         # Draw cell rectangles
