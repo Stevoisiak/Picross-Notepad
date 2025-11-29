@@ -34,13 +34,7 @@ class PicrossApp(tk.Tk):
         self.grid_state = [[CellState.EMPTY for _ in range(GRID_DIMENSIONS)] for _ in range(GRID_DIMENSIONS)]
         self.rect_ids = [[None for _ in range(GRID_DIMENSIONS)] for _ in range(GRID_DIMENSIONS)]
         self.mark_tags = [[f"mark_{row}_{col}" for col in range(GRID_DIMENSIONS)] for row in range(GRID_DIMENSIONS)]
-
-        # Drag painting
-        self.user_is_dragging = False
-        self.dragging_target_state = CellState.EMPTY
-        self.dragging_button_id = None
-        self.dragging_lock_axis = None  # ('row', index) or ('col', index)
-        self.dragging_path_cells = []  # track cells filled during drag
+        self._reset_drag()
 
         # Hint entries (4 per row, 4 per column)
         self.row_hint_entries = None  # list[list[Entry]] length GRID_SIZE, each with 4 entries
@@ -122,25 +116,25 @@ class PicrossApp(tk.Tk):
         # Bind mouse input for grid cells
         self.grid_canvas.bind("<Button-1>", lambda e: self._on_press(e, CellState.FILLED, 1))
         self.grid_canvas.bind("<B1-Motion>", self._on_drag)
-        self.grid_canvas.bind("<ButtonRelease-1>", self._on_release)
+        self.grid_canvas.bind("<ButtonRelease-1>", self._reset_drag)
         # Middle click (Button-2); Shift-Left fallback
         self.grid_canvas.bind("<Button-2>", lambda e: self._on_press(e, CellState.MAYBE, 2))
         self.grid_canvas.bind("<B2-Motion>", self._on_drag)
-        self.grid_canvas.bind("<ButtonRelease-2>", self._on_release)
+        self.grid_canvas.bind("<ButtonRelease-2>", self._reset_drag)
         self.grid_canvas.bind("<Shift-Button-1>", lambda e: self._on_press(e, CellState.MAYBE, 2))
         self.grid_canvas.bind("<Shift-B1-Motion>", self._on_drag)
-        self.grid_canvas.bind("<Shift-ButtonRelease-1>", self._on_release)
+        self.grid_canvas.bind("<Shift-ButtonRelease-1>", self._reset_drag)
         # Right click (Button-3); Ctrl-Left fallback (macOS)
         self.grid_canvas.bind("<Button-3>", lambda e: self._on_press(e, CellState.X, 3))
         self.grid_canvas.bind("<B3-Motion>", self._on_drag)
-        self.grid_canvas.bind("<ButtonRelease-3>", self._on_release)
+        self.grid_canvas.bind("<ButtonRelease-3>", self._reset_drag)
         self.grid_canvas.bind("<Control-Button-1>", lambda e: self._on_press(e, CellState.X, 3))
         self.grid_canvas.bind("<Control-B1-Motion>", self._on_drag)
-        self.grid_canvas.bind("<Control-ButtonRelease-1>", self._on_release)
+        self.grid_canvas.bind("<Control-ButtonRelease-1>", self._reset_drag)
         # Mouse5 = clear
         self.grid_canvas.bind("<Button-5>", lambda e: self._on_press(e, CellState.EMPTY, 8))
         self.grid_canvas.bind("<B5-Motion>", self._on_drag)
-        self.grid_canvas.bind("<ButtonRelease-5>", self._on_release)
+        self.grid_canvas.bind("<ButtonRelease-5>", self._reset_drag)
 
 
         # Bind arrow key navigation for hint boxes
@@ -422,11 +416,12 @@ class PicrossApp(tk.Tk):
         self._update_drag_axis_lock(cell)
         self._apply_cell_state(event, self.dragging_target_state)
 
-    def _on_release(self, event):
+    def _reset_drag(self, event=None):
         self.user_is_dragging = False
         self.dragging_button_id = None
         self.dragging_lock_axis = None  # ('row', index) or ('col', index)
         self.dragging_path_cells = []  # track cells filled during drag
+        self.dragging_target_state = CellState.EMPTY
 
     def _event_to_cell(self, event):
         x, y = event.x, event.y
