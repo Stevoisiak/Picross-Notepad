@@ -15,6 +15,7 @@ CELL_MAYBE_COLOR = "#666"
 BLOCK_INTERVAL = 4  # thicker grid lines every BLOCK_SIZE cells
 LINE_THIN = 1
 LINE_THICK = 2
+HINT_FONT = ("Segoe UI", 10, "bold")
 
 class CellState(IntEnum):
     EMPTY = 0
@@ -82,7 +83,7 @@ class PicrossApp(tk.Tk):
             col_frame = tk.Frame(area, bg=HINT_BG_COLOR)
             col_frame.grid(row=0, column=c+1, padx=(0,0), pady=(0,0))
             for i in range(4):
-                e = tk.Entry(col_frame, width=3, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=("Segoe UI", 10, "bold"))
+                e = tk.Entry(col_frame, width=3, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=HINT_FONT)
                 e.grid(row=i, column=0, pady=0, ipady=0)
                 self.col_hint_entries[c].append(e)
 
@@ -106,7 +107,7 @@ class PicrossApp(tk.Tk):
             row_frame = tk.Frame(area, bg=HINT_BG_COLOR)
             row_frame.grid(row=r+1, column=0, padx=(0,0), pady=(0,0), sticky="w")
             for i in range(4):
-                e = tk.Entry(row_frame, width=3, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=("Segoe UI", 10, "bold"))
+                e = tk.Entry(row_frame, width=3, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=HINT_FONT)
                 e.grid(row=0, column=i, padx=(4 if i > 0 else 0,0), ipady=2)
                 self.row_hint_entries[r].append(e)
 
