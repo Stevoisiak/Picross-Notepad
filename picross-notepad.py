@@ -51,8 +51,8 @@ class PicrossApp(tk.Tk):
         # Toolbar
         toolbar = ttk.Frame(root)
         toolbar.grid(row=0, column=0, sticky="w", pady=(0,6))
-        ttk.Button(toolbar, text="Reset Board", command=self.reset_board).grid(row=0, column=0, padx=(0,6))
-        ttk.Button(toolbar, text="Clear Hints", command=self.clear_hints).grid(row=0, column=1, padx=(0,6))
+        ttk.Button(toolbar, text="Reset Board", command=self.reset_board).grid(row=0, column=0, padx=(0,3))
+        ttk.Button(toolbar, text="Clear Hints", command=self.clear_hints).grid(row=0, column=1, padx=(0,3))
         ttk.Label(toolbar, text="Controls: Left=Fill • Right=X • Middle=Maybe • Drag to paint").grid(row=0, column=2)
 
         # Main area with hints + grid
@@ -63,20 +63,20 @@ class PicrossApp(tk.Tk):
         self.col_hint_entries = [[] for _ in range(GRID_SIZE)]
         for c in range(GRID_SIZE):
             col_frame = tk.Frame(area, bg=BG_HINT)
-            col_frame.grid(row=0, column=c+1, padx=(0,0), pady=(0,4))
+            col_frame.grid(row=0, column=c+1, padx=(0,0), pady=(0,2))
             for i in range(4):
                 e = tk.Entry(col_frame, width=3, justify="center", bg=BG_HINT, relief="solid", bd=1, font=("Segoe UI", 10, "bold"))
-                e.grid(row=i, column=0, pady=1)
+                e.grid(row=i, column=0, pady=0)
                 self.col_hint_entries[c].append(e)
 
         # === Row hints: 4 horizontally per row ===
         self.row_hint_entries = [[] for _ in range(GRID_SIZE)]
         for r in range(GRID_SIZE):
             row_frame = tk.Frame(area, bg=BG_HINT)
-            row_frame.grid(row=r+1, column=0, padx=(0,6), pady=(0,0))
+            row_frame.grid(row=r+1, column=0, padx=(0,2), pady=(0,0))
             for i in range(4):
                 e = tk.Entry(row_frame, width=3, justify="center", bg=BG_HINT, relief="solid", bd=1, font=("Segoe UI", 10, "bold"))
-                e.grid(row=0, column=i, padx=1)
+                e.grid(row=0, column=i, padx=0)
                 self.row_hint_entries[r].append(e)
 
         # Canvas for the main grid
