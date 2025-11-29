@@ -37,8 +37,6 @@ class PicrossApp(tk.Tk):
 
         # Drag painting
         self.user_is_dragging = False
-        self.dragging_lock_axis = None
-        self.dragging_path_cells = []
         self.dragging_target_state = CellState.EMPTY
         self.dragging_button_id = None
         self.dragging_lock_axis = None  # ('row', index) or ('col', index)
