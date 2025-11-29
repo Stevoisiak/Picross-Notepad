@@ -217,10 +217,10 @@ class PicrossApp(tk.Tk):
         for row in range(GRID_DIMENSIONS):
             for i in range(HINTS_PER_SIDE):
                 e = self.row_hint_entries[row][i]
-                e.bind("<Left>", lambda ev, row=row, i=i: self._row_hint_move(row, i, "left"))
-                e.bind("<Right>", lambda ev, row=row, i=i: self._row_hint_move(row, i, "right"))
                 e.bind("<Up>", lambda ev, row=row, i=i: self._row_hint_move(row, i, "up"))
                 e.bind("<Down>", lambda ev, row=row, i=i: self._row_hint_move(row, i, "down"))
+                e.bind("<Left>", lambda ev, row=row, i=i: self._row_hint_move(row, i, "left"))
+                e.bind("<Right>", lambda ev, row=row, i=i: self._row_hint_move(row, i, "right"))
 
         # Column hints: up/down within the column; left/right to same index in prev/next column
         for col in range(GRID_DIMENSIONS):
@@ -233,18 +233,18 @@ class PicrossApp(tk.Tk):
 
     def _row_hint_move(self, row, i, direction):
         target = None
-        if direction == "left":
-            if i > 0:
-                target = self.row_hint_entries[row][i-1]
-        elif direction == "right":
-            if i < HINTS_PER_SIDE - 1:
-                target = self.row_hint_entries[row][i+1]
-        elif direction == "up":
+        if direction == "up":
             if row > 0:
                 target = self.row_hint_entries[row-1][i]
         elif direction == "down":
             if row < GRID_DIMENSIONS - 1:
                 target = self.row_hint_entries[row+1][i]
+        elif direction == "left":
+            if i > 0:
+                target = self.row_hint_entries[row][i-1]
+        elif direction == "right":
+            if i < HINTS_PER_SIDE - 1:
+                target = self.row_hint_entries[row][i+1]
 
         if target is not None:
             self._focus_entry(target)
