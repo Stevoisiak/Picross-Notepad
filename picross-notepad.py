@@ -17,6 +17,8 @@ LINE_THIN = 1
 LINE_THICK = 2
 HINT_FONT = ("Segoe UI", 10, "bold")
 HINTS_PER_SIDE = 4
+TOP_HINT_ENTRY_HEIGHT = 22
+LEFT_HINT_ENTRY_WIDTH = 28  # FIXME: When this is too thin, line doesn't reach main grid
 
 class CellState(IntEnum):
     EMPTY = 0
@@ -59,8 +61,7 @@ class PicrossApp(tk.Tk):
         area.grid(row=1, column=0)
 
         # === Column separators canvas (TOP) ===
-        hint_entry_height = 22  # height per hint entry row
-        top_canvas_height = HINTS_PER_SIDE * hint_entry_height
+        top_canvas_height = HINTS_PER_SIDE * TOP_HINT_ENTRY_HEIGHT
         self.col_sep_canvas = tk.Canvas(
             area,
             width=GRID_DIMENSIONS * CELL_SIZE,
@@ -84,7 +85,7 @@ class PicrossApp(tk.Tk):
         self._draw_top_hint_separators(top_canvas_height)
 
         # === Row separators canvas (LEFT) ===
-        left_canvas_width = HINTS_PER_SIDE * 28  # width to accommodate 4 entries
+        left_canvas_width = HINTS_PER_SIDE * LEFT_HINT_ENTRY_WIDTH  # width to accommodate 4 entries
         self.row_sep_canvas = tk.Canvas(
             area,
             width=left_canvas_width,
