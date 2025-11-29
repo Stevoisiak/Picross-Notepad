@@ -12,6 +12,9 @@ BG_GRID = "#FFFFFF"
 FILLED_COLOR = "#111111"
 X_COLOR = "#D22"
 MAYBE_COLOR = "#666"
+BLOCK_SIZE = 4  # thicker grid lines every BLOCK_SIZE cells
+THIN = 1
+THICK = 2
 
 class CellState(IntEnum):
     EMPTY = 0
@@ -150,12 +153,12 @@ class PicrossApp(tk.Tk):
         # Thin separators between columns
         for i in range(1, GRID_SIZE):
             x = i * CELL_SIZE
-            self.col_sep_canvas.create_line(x, 0, x, height, fill=LINE_COLOR, width=1, tags=("sep",))
+            self.col_sep_canvas.create_line(x, 0, x, height, fill=LINE_COLOR, width=THIN, tags=("sep",))
 
         # Optional: thicker delimiters every 4th column to match grid blocks
-        for i in range(4, GRID_SIZE, 4):
+        for i in range(BLOCK_SIZE, GRID_SIZE, BLOCK_SIZE):
             x = i * CELL_SIZE
-            self.col_sep_canvas.create_line(x, 0, x, height, fill=LINE_COLOR, width=2, tags=("sep",))
+            self.col_sep_canvas.create_line(x, 0, x, height, fill=LINE_COLOR, width=THICK, tags=("sep",))
 
     def _draw_left_separators(self, width: int) -> None:
         """Draw only horizontal lines between rows in the left hints area."""
@@ -164,12 +167,12 @@ class PicrossApp(tk.Tk):
         # Thin separators between rows
         for i in range(1, GRID_SIZE):
             y = i * CELL_SIZE
-            self.row_sep_canvas.create_line(0, y, width, y, fill=LINE_COLOR, width=1, tags=("sep",))
+            self.row_sep_canvas.create_line(0, y, width, y, fill=LINE_COLOR, width=THIN, tags=("sep",))
 
         # Optional: thicker delimiters every 4th row to match grid blocks
-        for i in range(4, GRID_SIZE, 4):
+        for i in range(BLOCK_SIZE, GRID_SIZE, BLOCK_SIZE):
             y = i * CELL_SIZE
-            self.row_sep_canvas.create_line(0, y, width, y, fill=LINE_COLOR, width=2, tags=("sep",))
+            self.row_sep_canvas.create_line(0, y, width, y, fill=LINE_COLOR, width=THICK, tags=("sep",))
 
     def _draw_grid(self):
         # Draw cell rectangles
@@ -181,13 +184,13 @@ class PicrossApp(tk.Tk):
                 y1 = y0 + CELL_SIZE
                 rid = self.canvas.create_rectangle(
                     x0, y0, x1, y1,
-                    fill=BG_GRID, outline=LINE_COLOR, width=1, tags=(f"cell_{r}_{c}",)
+                    fill=BG_GRID, outline=LINE_COLOR, width=THIN, tags=(f"cell_{r}_{c}",)
                 )
                 self.rect_ids[r][c] = rid
 
         # Thicker delimiter lines every 4th (optional)
         for i in range(GRID_SIZE + 1):
-            w = 2 if i % 4 == 0 else 1
+            w = THICK if i % BLOCK_SIZE == 0 else THIN
             # vertical
             self.canvas.create_line(i * CELL_SIZE, 0, i * CELL_SIZE, GRID_SIZE * CELL_SIZE, fill=LINE_COLOR, width=w)
             # horizontal
