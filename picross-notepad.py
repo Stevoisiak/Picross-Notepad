@@ -126,9 +126,9 @@ class PicrossApp(tk.Tk):
                 )
                 self.rect_ids[r][c] = rid
 
-        # Thicker delimiter lines every 5th (optional)
+        # Thicker delimiter lines every 4th (optional)
         for i in range(GRID_SIZE + 1):
-            w = 2 if i % 5 == 0 else 1
+            w = 2 if i % 4 == 0 else 1
             # vertical
             self.canvas.create_line(i * CELL_SIZE, 0, i * CELL_SIZE, GRID_SIZE * CELL_SIZE, fill=LINE_COLOR, width=w)
             # horizontal
