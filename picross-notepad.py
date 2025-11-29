@@ -282,12 +282,11 @@ class PicrossApp(tk.Tk):
         except tk.TclError:
             pass
 
-    # === Grid interaction ===
-    def _on_press(self, event, desired_state, button_id):
-        cell = self._event_to_cell(event)
-        if not cell:
-            return
-        r, c = cell
+    def _event_to_locked_cell(self, event):
+        base = self._event_to_cell(event)
+        if not base:
+            return None
+        r, c = base
 
         # If lock_axis is active, override row or column based on axis
         if self.lock_axis:
@@ -300,98 +299,67 @@ class PicrossApp(tk.Tk):
                 # Force column to locked column, compute row from mouse y
                 c = idx
                 r = event.y // CELL_SIZE
-            # Validate bounds
-            if r < 0 or r >= GRID_SIZE or c < 0 or c >= GRID_SIZE:
-                return
+        # Validate bounds
+        if r < 0 or r >= GRID_SIZE or c < 0 or c >= GRID_SIZE:
+            return None
+        return int(r), int(c)
 
-
-        # Track cells and determine lock axis
-        if cell not in self.drag_cells:
+    def _update_drag_axis_lock(self, cell):
+        if not self.drag_cells or self.drag_cells[-1] != cell:
             self.drag_cells.append(cell)
-            if len(self.drag_cells) == 2 and self.lock_axis is None:
-                r1, c1 = self.drag_cells[0]
-                r2, c2 = self.drag_cells[1]
-                if r1 == r2:
-                    self.lock_axis = ('row', r1)
-                elif c1 == c2:
-                    self.lock_axis = ('col', c1)
+        if len(self.drag_cells) == 2 and self.lock_axis is None:
+            r1, c1 = self.drag_cells[0]
+            r2, c2 = self.drag_cells[1]
+            if r1 == r2:
+                self.lock_axis = ('row', r1)
+            elif c1 == c2:
+                self.lock_axis = ('col', c1)
 
+    def _compute_drag_target(self, r, c, desired_state):
+        current = self.grid_state[r][c]
+        if desired_state == CellState.EMPTY:
+            return CellState.EMPTY
+        return CellState.EMPTY if current == desired_state else desired_state
+
+    def _apply_cell_state(self, event, target_state):
+        cell = self._event_to_locked_cell(event)
+        if not cell:
+            return
+        r, c = cell
         # Enforce lock if set
         if self.lock_axis:
             axis, idx = self.lock_axis
-            if axis == 'row' and r != idx:
+            if (axis == 'row' and r != idx) or (axis == 'col' and c != idx):
                 return
-            if axis == 'col' and c != idx:
-                return
+        if self.grid_state[r][c] != target_state:
+            self._set_cell(r, c, target_state)
 
-        current = self.grid_state[r][c]
 
-        # If we're clearing, never toggle — always clear
-        if desired_state == CellState.EMPTY:
-            self.drag_target_state = CellState.EMPTY
-        else:
-            # Toggle: clicking same state sets to empty; else set to desired state
-            if current == desired_state:
-                self.drag_target_state = CellState.EMPTY
-            else:
-                self.drag_target_state = desired_state
-
+    # === Grid interaction ===
+    def _on_press(self, event, desired_state, button_id):
+        cell = self._event_to_locked_cell(event)
+        if not cell:
+            return
+        r, c = cell
+        self.drag_target_state = self._compute_drag_target(r, c, desired_state)
         self.drag_cells = []
         self.lock_axis = None
         self.drag_active = True
         self.drag_button = button_id
-        self._set_cell(r, c, self.drag_target_state)
+        self._update_drag_axis_lock((r, c))
+        self._apply_cell_state(event, self.drag_target_state)
 
     def _on_drag(self, event):
         if not self.drag_active:
             return
-        cell = self._event_to_cell(event)
+        cell = self._event_to_locked_cell(event)
         if not cell:
             return
-        r, c = cell
-
-        # If lock_axis is active, override row or column based on axis
-        if self.lock_axis:
-            axis, idx = self.lock_axis
-            if axis == 'row':
-                # Force row to locked row, compute column from mouse x
-                r = idx
-                c = event.x // CELL_SIZE
-            elif axis == 'col':
-                # Force column to locked column, compute row from mouse y
-                c = idx
-                r = event.y // CELL_SIZE
-            # Validate bounds
-            if r < 0 or r >= GRID_SIZE or c < 0 or c >= GRID_SIZE:
-                return
-
-
-        # Track cells and determine lock axis
-        if cell not in self.drag_cells:
-            self.drag_cells.append(cell)
-            if len(self.drag_cells) == 2 and self.lock_axis is None:
-                r1, c1 = self.drag_cells[0]
-                r2, c2 = self.drag_cells[1]
-                if r1 == r2:
-                    self.lock_axis = ('row', r1)
-                elif c1 == c2:
-                    self.lock_axis = ('col', c1)
-
-        # Enforce lock if set
-        if self.lock_axis:
-            axis, idx = self.lock_axis
-            if axis == 'row' and r != idx:
-                return
-            if axis == 'col' and c != idx:
-                return
-
-        if self.grid_state[r][c] != self.drag_target_state:
-            self._set_cell(r, c, self.drag_target_state)
+        self._update_drag_axis_lock(cell)
+        self._apply_cell_state(event, self.drag_target_state)
 
     def _on_release(self, event):
         self.drag_active = False
-        self.lock_axis = None
-        self.drag_cells = []
         self.drag_button = None
         self.lock_axis = None  # ('row', index) or ('col', index)
         self.drag_cells = []  # track cells filled during drag
