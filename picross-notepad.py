@@ -89,7 +89,7 @@ class PicrossApp(tk.Tk):
                 self.col_hint_entries[col].append(e)
 
         # Draw vertical separators between columns on the top canvas
-        self._draw_top_separators(top_canvas_height)
+        self._draw_top_hint_separators(top_canvas_height)
 
         # === Row separators canvas (LEFT) ===
         left_canvas_width = HINTS_PER_SIDE * 28  # width to accommodate 4 entries
@@ -113,7 +113,7 @@ class PicrossApp(tk.Tk):
                 self.row_hint_entries[row].append(e)
 
         # Draw horizontal separators between rows on the left canvas
-        self._draw_left_separators(left_canvas_width)
+        self._draw_left_hint_separators(left_canvas_width)
 
         # Canvas for the main grid
         grid_canvas_width = GRID_DIMENSIONS * CELL_SIZE
@@ -148,7 +148,7 @@ class PicrossApp(tk.Tk):
         # Bind arrow key navigation for hint boxes
         self._bind_hint_navigation()
 
-    def _draw_top_separators(self, height: int) -> None:
+    def _draw_top_hint_separators(self, height: int) -> None:
         """Draw vertical lines between columns in the top hints area, including outer borders."""
         self.col_sep_canvas.delete("sep")
 
@@ -177,7 +177,7 @@ class PicrossApp(tk.Tk):
                 col_pos_x, 0, col_pos_x, height, fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
             )
 
-    def _draw_left_separators(self, width: int) -> None:
+    def _draw_left_hint_separators(self, width: int) -> None:
         """Draw horizontal lines between rows in the left hints area, including outer borders."""
         self.row_sep_canvas.delete("sep")
 
