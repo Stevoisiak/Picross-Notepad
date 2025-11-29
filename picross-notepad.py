@@ -65,7 +65,7 @@ class PicrossApp(tk.Tk):
             col_frame = tk.Frame(area, bg=BG_HINT)
             col_frame.grid(row=0, column=c+1, padx=(0,0), pady=(0,4))
             for i in range(4):
-                e = tk.Entry(col_frame, width=3, justify="center", bg=BG_HINT, relief="solid", bd=1)
+                e = tk.Entry(col_frame, width=3, justify="center", bg=BG_HINT, relief="solid", bd=1, font=("Segoe UI", 10, "bold"))
                 e.grid(row=i, column=0, pady=1)
                 self.col_hint_entries[c].append(e)
 
@@ -75,7 +75,7 @@ class PicrossApp(tk.Tk):
             row_frame = tk.Frame(area, bg=BG_HINT)
             row_frame.grid(row=r+1, column=0, padx=(0,6), pady=(0,0))
             for i in range(4):
-                e = tk.Entry(row_frame, width=3, justify="center", bg=BG_HINT, relief="solid", bd=1)
+                e = tk.Entry(row_frame, width=3, justify="center", bg=BG_HINT, relief="solid", bd=1, font=("Segoe UI", 10, "bold"))
                 e.grid(row=0, column=i, padx=1)
                 self.row_hint_entries[r].append(e)
 
