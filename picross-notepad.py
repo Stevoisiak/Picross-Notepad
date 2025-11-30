@@ -119,7 +119,7 @@ class PicrossApp(tk.Tk):
         # Canvas for the main grid
         grid_canvas_width = GRID_DIMENSIONS * CELL_SIZE
         grid_canvas_height = GRID_DIMENSIONS * CELL_SIZE
-        self.grid_canvas = tk.Canvas(area, width=grid_canvas_width, height=grid_canvas_height, bg=GRID_BG_COLOR, highlightthickness=0)
+        self.grid_canvas = tk.Canvas(area, width=grid_canvas_width, height=grid_canvas_height, bg=GRID_BG_COLOR, highlightthickness=0, takefocus=1)
         self.grid_canvas.grid(row=1, column=1, rowspan=GRID_DIMENSIONS, columnspan=GRID_DIMENSIONS)
 
         # Bind mouse input for grid cells
@@ -426,6 +426,9 @@ class PicrossApp(tk.Tk):
 
     # === Grid interaction ===
     def _on_press(self, event, desired_state):
+        # Move focus to the canvas so any Entry (hint box) loses focus
+        self.grid_canvas.focus_set()
+
         cell = self._event_to_locked_cell(event)
         if not cell:
             return
