@@ -22,7 +22,7 @@ class GameConfig:
     COLOR_CELL_MAYBE: str = "#666666"
     
     # Fonts & Dimensions
-    FONT_HINT: Tuple[str, int, str] = ("Calibri", 13, "bold")
+    FONT_HINT: Tuple[str, int, str] = ("Calibri", 14, "bold")
     TOP_HINT_HEIGHT: int = 22
     LEFT_HINT_WIDTH: int = 20
 
