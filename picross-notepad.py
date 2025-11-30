@@ -23,8 +23,8 @@ class GameConfig:
     
     # Fonts & Dimensions
     FONT_HINT: Tuple[str, int, str] = ("Calibri", 11, "bold")
-    TOP_HINT_HEIGHT: int = 22 * HINTS_PER_SIDE
-    LEFT_HINT_WIDTH: int = 22 * HINTS_PER_SIDE
+    HINT_CROSS_SIZE: int = 22
+
     LINE_WIDTH_THIN: int = 1
     LINE_WIDTH_THICK: int = 2
 
@@ -67,7 +67,7 @@ class PicrossGrid(tk.Canvas):
 
     def _init_draw(self):
         """Draws the initial grid lines and empty cell rectangles."""
-        # 1. Draw cell backgrounds
+        # 1. Cell backgrounds
         for r in range(CFG.DIMENSIONS):
             for c in range(CFG.DIMENSIONS):
                 x0, y0 = c * CFG.CELL_SIZE, r * CFG.CELL_SIZE
@@ -75,7 +75,7 @@ class PicrossGrid(tk.Canvas):
                 rid = self.create_rectangle(x0, y0, x1, y1, fill=CFG.COLOR_BG_GRID, width=0)
                 self.rect_ids[r][c] = rid
 
-        # 2. Draw grid lines
+        # 2. Grid lines
         total_size = CFG.DIMENSIONS * CFG.CELL_SIZE
         for i in range(1, CFG.DIMENSIONS):
             width = CFG.LINE_WIDTH_THICK if i % CFG.BLOCK_INTERVAL == 0 else CFG.LINE_WIDTH_THIN
@@ -244,98 +244,99 @@ class PicrossApp(tk.Tk):
         area.grid(row=1, column=0)
 
         # --- Top Hints (Column Hints) ---
-        # The canvas draws the lines behind the hint boxes.
-        # CRITICAL: columnspan=16 ensures the canvas stretches across all hint columns.
-        grid_pixel_width = CFG.DIMENSIONS * CFG.CELL_SIZE
+        top_w = CFG.DIMENSIONS * CFG.CELL_SIZE
+        top_h = CFG.HINTS_PER_SIDE * CFG.HINT_CROSS_SIZE
         
         self.col_sep_canvas = tk.Canvas(
             area, 
-            width=grid_pixel_width, 
-            height=CFG.TOP_HINT_HEIGHT, 
+            width=top_w, 
+            height=top_h, 
             bg=CFG.COLOR_BG_HINT, 
             highlightthickness=0
         )
-        self.col_sep_canvas.grid(row=0, column=1, columnspan=CFG.DIMENSIONS, sticky="ew")
+        self.col_sep_canvas.grid(row=0, column=1, sticky="nsew")
         
-        self._draw_separators(self.col_sep_canvas, grid_pixel_width, CFG.TOP_HINT_HEIGHT, vertical=True)
+        self._draw_separators(self.col_sep_canvas, top_w, top_h, vertical=True)
+        self.col_sep_canvas.bind("<Configure>", 
+            lambda e: self._draw_separators(self.col_sep_canvas, e.width, e.height, vertical=True))
 
         # Place the Entry widgets over the canvas
         for c in range(CFG.DIMENSIONS):
             # Frame for one column of hints
-            frame = tk.Frame(area, bg=CFG.COLOR_BG_HINT)
-            frame.grid(row=0, column=c+1, sticky="s", padx=0, pady=0)
-            
             col_entries = []
             for i in range(CFG.HINTS_PER_SIDE):
-                e = self._create_hint_entry(frame, width=3)
-                e.pack(side="top", ipady=0)
+                x = c * CFG.CELL_SIZE + CFG.CELL_SIZE / 2
+                y = i * CFG.HINT_CROSS_SIZE + CFG.HINT_CROSS_SIZE / 2
+                e = tk.Entry(self.col_sep_canvas, justify="center", 
+                             bg=CFG.COLOR_BG_HINT, relief="flat", bd=0,
+                             font=CFG.FONT_HINT)
+                self.col_sep_canvas.create_window(x, y, 
+                                                  width=CFG.CELL_SIZE - 4, 
+                                                  height=CFG.HINT_CROSS_SIZE - 4, 
+                                                  window=e)
                 col_entries.append(e)
             self.col_hints.append(col_entries)
 
         # --- Left Hints (Row Hints) ---
-        grid_pixel_height = CFG.DIMENSIONS * CFG.CELL_SIZE
-
-        # CRITICAL: rowspan=16 ensures the canvas stretches down all hint rows.
+        left_w = CFG.HINTS_PER_SIDE * CFG.HINT_CROSS_SIZE
+        left_h = CFG.DIMENSIONS * CFG.CELL_SIZE
+        
         self.row_sep_canvas = tk.Canvas(
             area,
-            width=CFG.LEFT_HINT_WIDTH,
-            height=grid_pixel_height,
+            width=left_w,
+            height=left_h, 
             bg=CFG.COLOR_BG_HINT,
             highlightthickness=0
         )
-        self.row_sep_canvas.grid(row=1, column=0, rowspan=CFG.DIMENSIONS, sticky="ns")
+        self.row_sep_canvas.grid(row=1, column=0, sticky="nsew")
+        
+        self._draw_separators(self.row_sep_canvas, left_w, left_h, vertical=False)
+        self.row_sep_canvas.bind("<Configure>", 
+            lambda e: self._draw_separators(self.row_sep_canvas, e.width, e.height, vertical=False))
 
-        # Place the Entry widgets to the left
         for r in range(CFG.DIMENSIONS):
-            # Frame for one row of hints
-            frame = tk.Frame(area, bg=CFG.COLOR_BG_HINT)
-            frame.grid(row=r+1, column=0, sticky="e", padx=0, pady=0)
-            
             row_entries = []
             for i in range(CFG.HINTS_PER_SIDE):
-                # Using minsize ensures alignment even if entry is empty/small
-                frame.grid_columnconfigure(i, minsize=22) 
-                e = self._create_hint_entry(frame, width=1)
-                e.grid(row=0, column=i, sticky="ew")
+                x = i * CFG.HINT_CROSS_SIZE + CFG.HINT_CROSS_SIZE / 2
+                y = r * CFG.CELL_SIZE + CFG.CELL_SIZE / 2
+                e = tk.Entry(self.row_sep_canvas, justify="center", 
+                             bg=CFG.COLOR_BG_HINT, relief="flat", bd=0,
+                             font=CFG.FONT_HINT)
+                self.row_sep_canvas.create_window(x, y, 
+                                                  width=CFG.HINT_CROSS_SIZE - 4, 
+                                                  height=CFG.CELL_SIZE - 4, 
+                                                  window=e)
                 row_entries.append(e)
             self.row_hints.append(row_entries)
         
-        # Draw left separators (needs idle update to get width if dynamic, but fixed width is safer here)
-        self._draw_separators(self.row_sep_canvas, CFG.LEFT_HINT_WIDTH, grid_pixel_height, vertical=False)
-
         # --- Main Grid ---
-        # CRITICAL: This must align with rows=1..16 and cols=1..16 of the hint frames.
-        # We use rowspan and columnspan so it occupies the exact same grid cells as the hint frames adjacent to it.
         self.grid_canvas = PicrossGrid(area)
-        self.grid_canvas.grid(row=1, column=1, rowspan=CFG.DIMENSIONS, columnspan=CFG.DIMENSIONS)
-
-    def _create_hint_entry(self, parent, width):
-        return tk.Entry(parent, width=width, justify="center", 
-                        bg=CFG.COLOR_BG_HINT, relief="flat", bd=0,
-                        font=CFG.FONT_HINT)
+        self.grid_canvas.grid(row=1, column=1)
 
     def _draw_separators(self, canvas, width, height, vertical=True):
-        canvas.delete("all")
-        inset = CFG.LINE_WIDTH_THICK / 2
-        
-        # Outer Borders
-        if vertical:
-            canvas.create_line(inset, 0, inset, height, fill=CFG.COLOR_GRID_LINE, width=CFG.LINE_WIDTH_THICK)
-            canvas.create_line(width-inset, 0, width-inset, height, fill=CFG.COLOR_GRID_LINE, width=CFG.LINE_WIDTH_THICK)
-        else:
-            canvas.create_line(0, inset, width, inset, fill=CFG.COLOR_GRID_LINE, width=CFG.LINE_WIDTH_THICK)
-            canvas.create_line(0, height-inset, width, height-inset, fill=CFG.COLOR_GRID_LINE, width=CFG.LINE_WIDTH_THICK)
-
-        # Internal Lines
+        """
+        Draws separation lines on the canvas.
+        vertical=True (Top Hints): Draws ONLY vertical lines (separating columns).
+        vertical=False (Left Hints): Draws ONLY horizontal lines (separating rows).
+        """
+        canvas.delete("lines")
         step = CFG.CELL_SIZE
-        for i in range(1, CFG.DIMENSIONS):
+        tags = ("lines",)
+
+        # Loop 0 to DIMENSIONS (inclusive) to draw start edge, internal lines, and end edge.
+        for i in range(0, CFG.DIMENSIONS + 1):
+            # Thick lines every BLOCK_INTERVAL, and at edges (0, 16)
             line_w = CFG.LINE_WIDTH_THICK if i % CFG.BLOCK_INTERVAL == 0 else CFG.LINE_WIDTH_THIN
             pos = i * step
             
             if vertical:
-                canvas.create_line(pos, 0, pos, height, fill=CFG.COLOR_GRID_LINE, width=line_w)
+                # Top Hints: Vertical lines only
+                # pos is x-coordinate. Draw from y=0 to y=height.
+                canvas.create_line(pos, 0, pos, height, fill=CFG.COLOR_GRID_LINE, width=line_w, tags=tags)
             else:
-                canvas.create_line(0, pos, width, pos, fill=CFG.COLOR_GRID_LINE, width=line_w)
+                # Left Hints: Horizontal lines only
+                # pos is y-coordinate. Draw from x=0 to x=width.
+                canvas.create_line(0, pos, width, pos, fill=CFG.COLOR_GRID_LINE, width=line_w, tags=tags)
 
     def _bind_navigation(self):
         """Binds arrow keys to navigate the hint grids."""
