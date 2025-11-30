@@ -23,7 +23,8 @@ class GameConfig:
     
     # Fonts & Dimensions
     FONT_HINT: Tuple[str, int, str] = ("Calibri", 11, "bold")
-    HINT_CROSS_SIZE: int = 22
+    TOP_HINT_HEIGHT: int = 22
+    LEFT_HINT_WIDTH: int = 20
 
     LINE_WIDTH_THIN: int = 1
     LINE_WIDTH_THICK: int = 2
@@ -245,7 +246,7 @@ class PicrossApp(tk.Tk):
 
         # --- Top Hints (Column Hints) ---
         top_w = CFG.DIMENSIONS * CFG.CELL_SIZE
-        top_h = CFG.HINTS_PER_SIDE * CFG.HINT_CROSS_SIZE
+        top_h = CFG.HINTS_PER_SIDE * CFG.TOP_HINT_HEIGHT
         
         self.col_sep_canvas = tk.Canvas(
             area, 
@@ -266,19 +267,19 @@ class PicrossApp(tk.Tk):
             col_entries = []
             for i in range(CFG.HINTS_PER_SIDE):
                 x = col * CFG.CELL_SIZE + CFG.CELL_SIZE / 2
-                y = i * CFG.HINT_CROSS_SIZE + CFG.HINT_CROSS_SIZE / 2
+                y = i * CFG.TOP_HINT_HEIGHT + CFG.TOP_HINT_HEIGHT / 2
                 e = tk.Entry(self.col_sep_canvas, justify="center", 
                              bg=CFG.COLOR_BG_HINT, relief="flat", bd=0,
                              font=CFG.FONT_HINT)
                 self.col_sep_canvas.create_window(x, y, 
                                                   width=CFG.CELL_SIZE - 4, 
-                                                  height=CFG.HINT_CROSS_SIZE - 4, 
+                                                  height=CFG.TOP_HINT_HEIGHT - 4, 
                                                   window=e)
                 col_entries.append(e)
             self.col_hints.append(col_entries)
 
         # --- Left Hints (Row Hints) ---
-        left_w = CFG.HINTS_PER_SIDE * CFG.HINT_CROSS_SIZE
+        left_w = CFG.HINTS_PER_SIDE * CFG.LEFT_HINT_WIDTH
         left_h = CFG.DIMENSIONS * CFG.CELL_SIZE
         
         self.row_sep_canvas = tk.Canvas(
@@ -297,13 +298,14 @@ class PicrossApp(tk.Tk):
         for row in range(CFG.DIMENSIONS):
             row_entries = []
             for i in range(CFG.HINTS_PER_SIDE):
-                x = i * CFG.HINT_CROSS_SIZE + CFG.HINT_CROSS_SIZE / 2
+                x = i * CFG.LEFT_HINT_WIDTH + CFG.LEFT_HINT_WIDTH / 2
                 y = row * CFG.CELL_SIZE + CFG.CELL_SIZE / 2
+                
                 e = tk.Entry(self.row_sep_canvas, justify="center", 
                              bg=CFG.COLOR_BG_HINT, relief="flat", bd=0,
                              font=CFG.FONT_HINT)
                 self.row_sep_canvas.create_window(x, y, 
-                                                  width=CFG.HINT_CROSS_SIZE - 4, 
+                                                  width=CFG.LEFT_HINT_WIDTH - 4, 
                                                   height=CFG.CELL_SIZE - 4, 
                                                   window=e)
                 row_entries.append(e)
