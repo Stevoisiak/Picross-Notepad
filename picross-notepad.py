@@ -12,13 +12,13 @@ GRID_BG_COLOR = "#FFFFFF"
 CELL_FILLED_COLOR = "#111111"
 CELL_X_COLOR = "#D22"
 CELL_MAYBE_COLOR = "#666"
-BLOCK_INTERVAL = 4  # thicker grid lines every BLOCK_SIZE cells
+BLOCK_INTERVAL = 4  # thicker grid lines every BLOCK_INTERVAL cells
 LINE_THIN = 1
 LINE_THICK = 2
-HINT_FONT = ("Segoe UI", 10, "bold")
+HINT_FONT = ("Segoe UI", 10, "bold")  # FIXME: Adjusting font size changes size of hint boxes
 HINTS_PER_SIDE = 4
 TOP_HINT_ENTRY_HEIGHT = 22
-LEFT_HINT_ENTRY_WIDTH = 22
+LEFT_HINT_ENTRY_WIDTH = 22 # FIXME: Descreasing this past a point doesn't reduce size of hint boxes
 
 class CellState(IntEnum):
     EMPTY = 0
@@ -39,8 +39,8 @@ class PicrossApp(tk.Tk):
         self._reset_drag()
 
         # Hint entries
-        self.row_hint_entries = None  # list[list[Entry]] length GRID_SIZE, each with 4 entries
-        self.col_hint_entries = None  # list[list[Entry]] length GRID_SIZE, each with 4 entries
+        self.row_hint_entries = None  # list[list[Entry]] length GRID_DIMENSIONS
+        self.col_hint_entries = None  # list[list[Entry]] length GRID_DIMENSIONS
 
         # Track each row's frame to measure real width dynamically 
         self.row_hint_frames = []
