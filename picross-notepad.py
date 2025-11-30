@@ -330,6 +330,14 @@ class PicrossApp(tk.Tk):
             # Thick lines every BLOCK_INTERVAL, and at edges (0, 16)
             line_w = CFG.LINE_WIDTH_THICK if i % CFG.BLOCK_INTERVAL == 0 else CFG.LINE_WIDTH_THIN
             pos = i * step
+
+            # Offset edges to prevent clipping
+            # If line is at 0, shift right by half width.
+            # If line is at max width, shift left by half width.
+            if i == 0:
+                pos += line_w / 2
+            elif i == CFG.DIMENSIONS:
+                pos -= line_w / 2
             
             if vertical:
                 # Top Hints: Vertical lines only
