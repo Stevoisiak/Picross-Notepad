@@ -18,7 +18,7 @@ LINE_THICK = 2
 HINT_FONT = ("Segoe UI", 10, "bold")  # FIXME: Adjusting font size changes size of hint boxes
 HINTS_PER_SIDE = 4
 TOP_HINT_ENTRY_HEIGHT = 22
-LEFT_HINT_ENTRY_WIDTH = 22 # FIXME: Descreasing this past a point doesn't reduce size of hint boxes
+LEFT_HINT_ENTRY_WIDTH = 22
 
 class CellState(IntEnum):
     EMPTY = 0
@@ -105,8 +105,10 @@ class PicrossApp(tk.Tk):
             row_frame.grid(row=row+1, column=0, padx=(0,0), pady=(0,0), sticky="e")
             self.row_hint_frames.append(row_frame)
             for i in range(HINTS_PER_SIDE):
-                e = tk.Entry(row_frame, width=3, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=HINT_FONT)
-                e.grid(row=0, column=i, padx=(2 if i > 0 else 0,0), ipady=2)
+                # Constrain each left hint column to a fixed pixel minsize so overall width obeys LEFT_HINT_ENTRY_WIDTH
+                row_frame.grid_columnconfigure(i, minsize=LEFT_HINT_ENTRY_WIDTH, weight=0)
+                e = tk.Entry(row_frame, width=1, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=HINT_FONT)
+                e.grid(row=0, column=i, padx=(1 if i > 0 else 0,0), ipady=1, sticky="ew")
                 self.row_hint_entries[row].append(e)
 
         # Draw horizontal separators between rows on the left canvas
@@ -229,7 +231,8 @@ class PicrossApp(tk.Tk):
 
         # Fallback to base width; +1px avoids off-by-one clipping
         base = HINTS_PER_SIDE * LEFT_HINT_ENTRY_WIDTH
-        target_width = max(widest, base) + 1
+        # Force to the designed base width so left hints never exceed the configured minsize columns
+        target_width = base + 1
 
         # Resize canvas and enforce the column width so edges meet
         self.row_sep_canvas.config(width=target_width)
