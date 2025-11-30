@@ -18,7 +18,7 @@ LINE_THICK = 2
 HINT_FONT = ("Segoe UI", 10, "bold")
 HINTS_PER_SIDE = 4
 TOP_HINT_ENTRY_HEIGHT = 22
-LEFT_HINT_ENTRY_WIDTH = 22  # FIXME: When this is too thin, line doesn't reach main grid
+LEFT_HINT_ENTRY_WIDTH = 22
 
 class CellState(IntEnum):
     EMPTY = 0
@@ -38,7 +38,7 @@ class PicrossApp(tk.Tk):
         self.mark_tags = [[f"mark_{row}_{col}" for col in range(GRID_DIMENSIONS)] for row in range(GRID_DIMENSIONS)]
         self._reset_drag()
 
-        # Hint entries (4 per row, 4 per column)
+        # Hint entries
         self.row_hint_entries = None  # list[list[Entry]] length GRID_SIZE, each with 4 entries
         self.col_hint_entries = None  # list[list[Entry]] length GRID_SIZE, each with 4 entries
 
@@ -73,7 +73,7 @@ class PicrossApp(tk.Tk):
         )
         self.col_sep_canvas.grid(row=0, column=1, columnspan=GRID_DIMENSIONS, sticky="ew")
 
-        # === Column hints: 4 stacked per column ===
+        # === Column hints ===
         self.col_hint_entries = [[] for _ in range(GRID_DIMENSIONS)]
         for col in range(GRID_DIMENSIONS):
             col_frame = tk.Frame(area, bg=HINT_BG_COLOR)
@@ -97,7 +97,7 @@ class PicrossApp(tk.Tk):
         )
         self.row_sep_canvas.grid(row=1, column=0, rowspan=GRID_DIMENSIONS, sticky="ns")
 
-        # === Row hints: 4 horizontally per row ===
+        # === Row hints ===
         self.row_hint_entries = [[] for _ in range(GRID_DIMENSIONS)]
         for row in range(GRID_DIMENSIONS):
             row_frame = tk.Frame(area, bg=HINT_BG_COLOR)
