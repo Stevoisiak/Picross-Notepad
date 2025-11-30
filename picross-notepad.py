@@ -18,7 +18,7 @@ LINE_THICK = 2
 HINT_FONT = ("Segoe UI", 10, "bold")
 HINTS_PER_SIDE = 4
 TOP_HINT_ENTRY_HEIGHT = 22
-LEFT_HINT_ENTRY_WIDTH = 28  # FIXME: When this is too thin, line doesn't reach main grid
+LEFT_HINT_ENTRY_WIDTH = 22  # FIXME: When this is too thin, line doesn't reach main grid
 
 class CellState(IntEnum):
     EMPTY = 0
@@ -42,6 +42,8 @@ class PicrossApp(tk.Tk):
         self.row_hint_entries = None  # list[list[Entry]] length GRID_SIZE, each with 4 entries
         self.col_hint_entries = None  # list[list[Entry]] length GRID_SIZE, each with 4 entries
 
+        # Track each row's frame to measure real width dynamically 
+        self.row_hint_frames = []
         self._build_ui()
         self._draw_grid()
 
@@ -85,7 +87,7 @@ class PicrossApp(tk.Tk):
         self._draw_top_hint_separators(top_canvas_height)
 
         # === Row separators canvas (LEFT) ===
-        left_canvas_width = HINTS_PER_SIDE * LEFT_HINT_ENTRY_WIDTH  # width to accommodate 4 entries
+        left_canvas_width = HINTS_PER_SIDE * LEFT_HINT_ENTRY_WIDTH
         self.row_sep_canvas = tk.Canvas(
             area,
             width=left_canvas_width,
@@ -99,14 +101,18 @@ class PicrossApp(tk.Tk):
         self.row_hint_entries = [[] for _ in range(GRID_DIMENSIONS)]
         for row in range(GRID_DIMENSIONS):
             row_frame = tk.Frame(area, bg=HINT_BG_COLOR)
-            row_frame.grid(row=row+1, column=0, padx=(0,0), pady=(0,0), sticky="w")
+            # align the row hints to the RIGHT edge of the left column, so they sit right next to the grid
+            row_frame.grid(row=row+1, column=0, padx=(0,0), pady=(0,0), sticky="e")
+            self.row_hint_frames.append(row_frame)
             for i in range(HINTS_PER_SIDE):
                 e = tk.Entry(row_frame, width=3, justify="center", bg=HINT_BG_COLOR, relief="flat", bd=0, font=HINT_FONT)
-                e.grid(row=0, column=i, padx=(4 if i > 0 else 0,0), ipady=2)
+                e.grid(row=0, column=i, padx=(2 if i > 0 else 0,0), ipady=2)
                 self.row_hint_entries[row].append(e)
 
         # Draw horizontal separators between rows on the left canvas
         self._draw_left_hint_separators(left_canvas_width)
+        # After layout, sync left canvas width to actual hint width
+        self.after(0, self._sync_left_hint_width)
 
         # Canvas for the main grid
         grid_canvas_width = GRID_DIMENSIONS * CELL_SIZE
@@ -211,6 +217,27 @@ class PicrossApp(tk.Tk):
                 0, y_pos, width, y_pos,
                 fill=GRID_LINE_COLOR, width=LINE_THICK, tags=("sep",)
             )
+
+    def _sync_left_hint_width(self):
+        """Ensure left separator canvas width matches the widest row hint frame."""
+        widest = 0
+        for rf in self.row_hint_frames:
+            rf.update_idletasks()
+            req = rf.winfo_reqwidth()
+            if req > widest:
+                widest = req
+
+        # Fallback to base width; +1px avoids off-by-one clipping
+        base = HINTS_PER_SIDE * LEFT_HINT_ENTRY_WIDTH
+        target_width = max(widest, base) + 1
+
+        # Resize canvas and enforce the column width so edges meet
+        self.row_sep_canvas.config(width=target_width)
+        area = self.row_sep_canvas.master
+        area.grid_columnconfigure(0, minsize=target_width)
+
+        # Redraw lines to the new width
+        self._draw_left_hint_separators(target_width)
 
     def _draw_grid(self):
         # Draw cell rectangles: fills only; no outlines (prevents doubled internal borders)
