@@ -157,7 +157,6 @@ class PicrossGrid(tk.Canvas):
                              font=("Segoe UI", 12, "bold"), tags=tag)
 
     def _on_press(self, event, desired_state):
-        self.focus_set()
         cell = self._get_cell_coords(event)
         if not cell: return
 
@@ -227,6 +226,7 @@ class PicrossApp(tk.Tk):
         
         self._build_layout()
         self._bind_navigation()
+        self._bind_focus_clear()
 
     def _build_layout(self):
         # Root container
@@ -376,6 +376,16 @@ class PicrossApp(tk.Tk):
                 e.bind("<Down>",  lambda _, col=col, i=i: move_focus(self.col_hints, col, i, 0, 1))
                 e.bind("<Left>",  lambda _, col=col, i=i: move_focus(self.col_hints, col, i, -1, 0))
                 e.bind("<Right>", lambda _, col=col, i=i: move_focus(self.col_hints, col, i, 1, 0))
+
+    def _bind_focus_clear(self):
+        # Clicking anywhere on the grid or root clears hint focus
+        self.bind_all("<Button-1>", self._clear_hint_focus, add="+")
+        
+    def _clear_hint_focus(self, event):
+        widget = event.widget
+        # If clicked widget is NOT an Entry, remove focus from hint entries
+        if not isinstance(widget, tk.Entry):
+            self.grid_canvas.focus_set()
 
     def reset_board(self):
         self.grid_canvas.reset_grid()
