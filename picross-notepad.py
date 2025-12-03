@@ -216,6 +216,7 @@ class PicrossGrid(tk.Canvas):
 # --- Main Application ---
 
 class PicrossApp(tk.Tk):
+
     def __init__(self):
         super().__init__()
         self.title(f"Picross {CFG.DIMENSIONS}×{CFG.DIMENSIONS}")
@@ -227,6 +228,28 @@ class PicrossApp(tk.Tk):
         self._build_layout()
         self._bind_navigation()
         self._bind_focus_clear()
+
+    
+    def validate_and_color(self, P, widget_id):
+        # Only allow single character
+        if len(P) > 1:
+            return False
+
+        # Update color based on hint number
+        colors = {
+            "1": "#AC0005",  # Red
+            "2": "#B15008",  # Orange
+            "3": "#D6AB2D",  # Yellow
+            "4": "#5ABB00",  # Green
+            "5": "#13338E",  # Blue
+            "6": "#4E1391",  # Purple
+            "7": "#7FAEE8",  # White
+            "8": "black",  # Black
+        }
+        widget = self.nametowidget(widget_id)
+        widget.config(fg=colors.get(P, "black"))
+        return True
+
 
     def _build_layout(self):
         # Root container
@@ -262,6 +285,7 @@ class PicrossApp(tk.Tk):
             lambda e: self._draw_separators(self.col_sep_canvas, e.width, e.height, vertical=True))
 
         # Place the Entry widgets over the canvas
+        vcmd = self.register(self.validate_and_color)
         for col in range(CFG.DIMENSIONS):
             # Frame for one column of hints
             col_entries = []
@@ -271,6 +295,7 @@ class PicrossApp(tk.Tk):
                 e = tk.Entry(self.col_sep_canvas, justify="center", 
                              bg=CFG.COLOR_BG_HINT, relief="flat", bd=0,
                              font=CFG.FONT_HINT)
+                e.config(validate="key", validatecommand=(vcmd, "%P", str(e)))
                 self.col_sep_canvas.create_window(x, y, 
                                                   width=CFG.CELL_SIZE - 4, 
                                                   height=CFG.TOP_HINT_HEIGHT - 4, 
@@ -304,6 +329,7 @@ class PicrossApp(tk.Tk):
                 e = tk.Entry(self.row_sep_canvas, justify="center", 
                              bg=CFG.COLOR_BG_HINT, relief="flat", bd=0,
                              font=CFG.FONT_HINT)
+                e.config(validate="key", validatecommand=(vcmd, "%P", str(e)))
                 self.row_sep_canvas.create_window(x, y, 
                                                   width=CFG.LEFT_HINT_WIDTH - 4, 
                                                   height=CFG.CELL_SIZE - 4, 
