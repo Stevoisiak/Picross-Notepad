@@ -237,9 +237,9 @@ class PicrossApp(tk.Tk):
 
         # Update color based on hint number
         colors = {
-            "1": "#AC0005",  # Red
-            "2": "#B15008",  # Orange
-            "3": "#D6AB2D",  # Yellow
+            "1": "#BA031B",  # Red
+            "2": "#FF7A00",  # Orange
+            "3": "#E5B500",  # Yellow
             "4": "#5ABB00",  # Green
             "5": "#13338E",  # Blue
             "6": "#4E1391",  # Purple
