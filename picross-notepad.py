@@ -244,7 +244,8 @@ class PicrossApp(tk.Tk):
             "5": "#1E5BFF",  # Blue
             "6": "#6F29E7",  # Purple
             "7": "#7FAEE8",  # White
-            "8": "black",  # Black
+            "8": "black",      # Black
+            "9": "#00B2B2",  # Teal Cyan (glass)
         }
         widget = self.nametowidget(widget_id)
         widget.config(fg=colors.get(P, "black"))
