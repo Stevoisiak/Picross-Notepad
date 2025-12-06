@@ -241,8 +241,8 @@ class PicrossApp(tk.Tk):
             "2": "#FF7A00",  # Orange
             "3": "#E5B500",  # Yellow
             "4": "#5ABB00",  # Green
-            "5": "#13338E",  # Blue
-            "6": "#4E1391",  # Purple
+            "5": "#1E5BFF",  # Blue
+            "6": "#6F29E7",  # Purple
             "7": "#7FAEE8",  # White
             "8": "black",  # Black
         }
